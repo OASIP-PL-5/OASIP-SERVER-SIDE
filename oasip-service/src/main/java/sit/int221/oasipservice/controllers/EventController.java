@@ -1,6 +1,7 @@
 package sit.int221.oasipservice.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -16,19 +17,21 @@ import java.util.List;
 public class EventController {
 
     private final EventRepository repository;
+
     public EventController(EventRepository repository) {
         this.repository = repository;
     }
 
     @GetMapping("")
-    public List<Event> getAllEvent(){
-        return repository.findAll();
+    public List<Event> getAllEvent() {
+        return repository.findAll(Sort.by(Sort.Direction.DESC,"eventStartTime"));
+//        return repository.findAllByOrderByDateAsc();
     }
 
     @GetMapping("/{bookingId}")
-    public Event getEvent(@PathVariable Integer bookingId){
+    public Event getEvent(@PathVariable Integer bookingId) {
         return repository.findById(bookingId).orElseThrow(
-                ()-> new ResponseStatusException(HttpStatus.NOT_FOUND,bookingId+" does not exist !"));
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, bookingId + " does not exist !"));
     }
 
 //    @PostMapping("")
