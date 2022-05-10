@@ -3,7 +3,9 @@ package sit.int221.oasipservice.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
+import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "event")
@@ -20,28 +22,28 @@ public class Event {
     private String bookingEmail;
 
     @Column(name = "eventStartTime", nullable = false)
-    private Instant eventStartTime;
+    private LocalDateTime eventStartTime;
 
     @Column(name = "eventDuration", nullable = false)
     private Integer eventDuration;
 
-    @Column(name = "eventNotes", nullable = false, length = 500)
+    @Column(name = "eventNotes", nullable = true, length = 500)
     private String eventNotes;
 
-    @JsonIgnore
+   @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "eventCategoryId", nullable = false)
     private EventCategory eventCategory;
 
     @Column(name = "eventCategory", nullable = false, length = 100)
-    private String eventCategory1;
+    private String eventCategoryName;
 
-    public String getEventCategory1() {
-        return eventCategory1;
+    public String getEventCategoryName() {
+        return eventCategoryName;
     }
 
-    public void setEventCategory1(String eventCategory1) {
-        this.eventCategory1 = eventCategory1;
+    public void setEventCategoryName(String eventCategoryName) {
+        this.eventCategoryName = eventCategoryName;
     }
 
     public EventCategory getEventCategory() {
@@ -68,11 +70,11 @@ public class Event {
         this.eventDuration = eventDuration;
     }
 
-    public Instant getEventStartTime() {
+    public LocalDateTime getEventStartTime() {
         return eventStartTime;
     }
 
-    public void setEventStartTime(Instant eventStartTime) {
+    public void setEventStartTime(LocalDateTime eventStartTime) {
         this.eventStartTime = eventStartTime;
     }
 

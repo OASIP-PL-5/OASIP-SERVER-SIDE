@@ -22,6 +22,7 @@ public class EventCategory {
     @Column(name = "eventDuration", nullable = false)
     private Integer eventDuration;
 
+//    @JsonIgnore
     @OneToMany(mappedBy = "eventCategory")
     private Set<Event> events = new LinkedHashSet<>();
 
