@@ -15,7 +15,7 @@ public class Event {
     @Column(name = "bookingId", nullable = false)
     private Integer id;
 
-    @Column(name = "bookingName", nullable = false, length = 50)
+    @Column(name = "bookingName", nullable = false, length = 100)
     private String bookingName;
 
     @Column(name = "bookingEmail", nullable = false, length = 50)
