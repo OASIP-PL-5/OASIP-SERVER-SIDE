@@ -1,8 +1,11 @@
 package sit.int221.oasipservice.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.hibernate.validator.constraints.Range;
 
 import javax.persistence.*;
+import javax.validation.Constraint;
+import javax.validation.constraints.*;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -13,16 +16,24 @@ public class EventCategory {
     @Column(name = "eventCategoryId", nullable = false)
     private Integer id;
 
-    @Column(name = "eventCategoryName", nullable = false, length = 100)
+    @NotBlank(message = "Clinic Name can not be empty")
+    @NotNull(message = "Clinic Name can not be null")
+    @Column(name = "eventCategoryName", nullable = false, length = 100, unique = true)
     private String eventCategoryName;
 
+    @NotBlank(message = "Clinic Description can not be empty")
+    @NotNull(message = "Clinic Description can not be null")
     @Column(name = "eventCategoryDescription", length = 500)
     private String eventCategoryDescription;
 
+
+    @NotNull(message = "Duration can not be null.")
+//    @Size(min = 1, max = 480, message = "Duration must be between 1 and 480 minutes.")
+    @Range(min = 1, max = 480 , message = "Duration must be between 1 and 480 minutes.")
     @Column(name = "eventDuration", nullable = false)
     private Integer eventDuration;
 
-//    @JsonIgnore
+    @JsonIgnore
     @OneToMany(mappedBy = "eventCategory")
     private Set<Event> events = new LinkedHashSet<>();
 

@@ -5,12 +5,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import sit.int221.oasipservice.dtos.EditEventDTO;
 import sit.int221.oasipservice.dtos.NewEventDTO;
 import sit.int221.oasipservice.dtos.SimpleEventDTO;
 import sit.int221.oasipservice.entities.Event;
 import sit.int221.oasipservice.repositories.EventRepository;
 import sit.int221.oasipservice.services.EventService;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -39,19 +41,20 @@ public class EventController {
     }
 
 
-//    @GetMapping("/{bookingId}")
-//    public Event getEvent(@PathVariable Integer bookingId) {
-//        return repository.findById(bookingId).orElseThrow(
-//                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, bookingId + " does not exist !"));
-//    }
-
-
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
-    public Event create(@RequestBody NewEventDTO newEvent) {
+    public Event create(@Valid @RequestBody NewEventDTO newEvent) {
         return eventService.save(newEvent);
     }
 
+    @PutMapping("/{id}")
+    public Event updateEvent(@Valid @RequestBody EditEventDTO updateEvent, @PathVariable Integer id ){
+        Event storedEventDetails = repository.getById(id);
+        storedEventDetails.setId(updateEvent.getId());
+        storedEventDetails.setEventStartTime(updateEvent.getEventStartTime());
+        storedEventDetails.setEventNotes(updateEvent.getEventNotes());
+        return repository.saveAndFlush(storedEventDetails);
+    }
 
     @DeleteMapping("/{bookingId}")
     public void delete(@PathVariable Integer bookingId) {
@@ -59,4 +62,6 @@ public class EventController {
                 new ResponseStatusException(HttpStatus.NOT_FOUND, bookingId + " does not exist !"));
         repository.deleteById(bookingId);
     }
+
+
 }

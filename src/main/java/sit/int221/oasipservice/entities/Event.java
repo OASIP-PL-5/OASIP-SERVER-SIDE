@@ -1,8 +1,11 @@
 package sit.int221.oasipservice.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import javax.persistence.*;
+import javax.servlet.annotation.HttpConstraint;
+import javax.validation.constraints.*;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -15,12 +18,19 @@ public class Event {
     @Column(name = "bookingId", nullable = false)
     private Integer id;
 
+    @NotBlank(message = "Booking name must not be empty.")
+    @NotNull(message = "Booking name is required.")
     @Column(name = "bookingName", nullable = false, length = 100)
     private String bookingName;
 
+    @NotBlank(message = "Booking email must not be empty.")
+    @NotNull(message = "Booking email is required.")
+    @Email(message = "Please insert a valid email format.")
     @Column(name = "bookingEmail", nullable = false, length = 50)
     private String bookingEmail;
 
+    @NotNull(message = "Please choose your appointment date.")
+    @FutureOrPresent(message = "Booking date must be future or present.")
     @Column(name = "eventStartTime", nullable = false)
     private LocalDateTime eventStartTime;
 
@@ -30,7 +40,8 @@ public class Event {
     @Column(name = "eventNotes", nullable = true, length = 500)
     private String eventNotes;
 
-   @JsonIgnore
+    @JsonIgnore
+    @NotNull(message = "Please choose Clinic Category date.")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "eventCategoryId", nullable = false)
     private EventCategory eventCategory;
@@ -101,4 +112,6 @@ public class Event {
     public void setId(Integer id) {
         this.id = id;
     }
+
+
 }
