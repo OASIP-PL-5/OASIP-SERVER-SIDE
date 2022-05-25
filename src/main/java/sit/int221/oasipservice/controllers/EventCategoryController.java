@@ -14,7 +14,7 @@ import javax.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/event-category")
+@RequestMapping("/api/event-categories")
 public class EventCategoryController {
 
     private final EventCategoryRepository repository;
@@ -51,7 +51,9 @@ public class EventCategoryController {
         storedEventCategoryDetails.setEventCategoryName(updateEventCategory.getEventCategoryName());
         storedEventCategoryDetails.setEventDuration(updateEventCategory.getEventDuration());
         storedEventCategoryDetails.setEventCategoryDescription(updateEventCategory.getEventCategoryDescription());
-        return repository.saveAndFlush(storedEventCategoryDetails);
+
+            return repository.saveAndFlush(storedEventCategoryDetails);
     }
+
 }
 

@@ -1,5 +1,6 @@
 package sit.int221.oasipservice.services;
 
+import org.apache.tomcat.jni.Local;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -9,6 +10,8 @@ import sit.int221.oasipservice.dtos.NewEventDTO;
 import sit.int221.oasipservice.dtos.SimpleEventDTO;
 import sit.int221.oasipservice.entities.Event;
 import sit.int221.oasipservice.repositories.EventRepository;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -32,6 +35,21 @@ public class EventService {
                         , "Booking Id: " + bookingId + "doesn't exist"));
         return modelMapper.map(event, SimpleEventDTO.class);
     }
+
+    public List<Event> getByEventCategory(Integer eventCategoryId){
+        return repository.getByEventCategory(eventCategoryId);
+    }
+
+
+
+
+//    public List<SimpleEventDTO> getEventCatNameBySearch(String eventCategoryName) {
+//        Event event = repository.findCategoryByName(eventCategoryName)
+//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND
+//                        , "Event Category: " + eventCategoryName + "doesn't exist"));
+//        return modelMapper.map(event, SimpleEventDTO.class);
+//    }
+
 
     public List<SimpleEventDTO> getEvents() {
         List<Event> eventList = repository.findAll();

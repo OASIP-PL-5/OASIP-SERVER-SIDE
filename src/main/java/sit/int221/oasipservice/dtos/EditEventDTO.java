@@ -13,11 +13,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class EditEventDTO {
     private Integer id;
-//    private String bookingName;
-//    private String bookingEmail;
     private LocalDateTime eventStartTime; //แก้ได้
-//    private Integer eventDuration;
     private String eventNotes; //แก้ได้
-//    private Integer eventCategoryId;
-//    private String eventCategoryName;
 }

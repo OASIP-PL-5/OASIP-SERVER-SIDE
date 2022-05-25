@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NewEventDTO {
-//    private Integer id;
     private String bookingName;
     private String bookingEmail;
     private LocalDateTime eventStartTime;
@@ -21,5 +20,4 @@ public class NewEventDTO {
     private String eventNotes;
     private String eventCategoryName;
     private Integer eventCategoryId;
-//    private String eventCategory;
 }

@@ -2,6 +2,7 @@ package sit.int221.oasipservice.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.validator.constraints.Range;
+import org.hibernate.validator.constraints.UniqueElements;
 
 import javax.persistence.*;
 import javax.validation.Constraint;
@@ -11,11 +12,13 @@ import java.util.Set;
 
 @Entity
 @Table(name = "event_category")
+
 public class EventCategory {
     @Id
     @Column(name = "eventCategoryId", nullable = false)
     private Integer id;
 
+//    @UniqueElements(message = "Clinic Name must be unique")
     @NotBlank(message = "Clinic Name can not be empty")
     @NotNull(message = "Clinic Name can not be null")
     @Column(name = "eventCategoryName", nullable = false, length = 100, unique = true)

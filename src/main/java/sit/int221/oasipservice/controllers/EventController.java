@@ -16,7 +16,7 @@ import javax.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/event")
+@RequestMapping("/api/events")
 public class EventController {
     @Autowired
     private EventService eventService;
@@ -40,6 +40,21 @@ public class EventController {
         return eventService.getSimpleEventById(id);
     }
 
+    @GetMapping("/getByEventCategories/{eventCategoryId}")
+    public List<Event> getByEventCategory(@PathVariable Integer eventCategoryId) {
+        return eventService.getByEventCategory(eventCategoryId);
+    }
+
+//Upcoming
+    @GetMapping("/getEventByUpcoming")
+    public List<Event> getEventsByUpcoming(){
+        return repository.getEventsByUpcoming();
+    }
+//Past
+    @GetMapping("/getEventByPast")
+    public List<Event> getEventsByPast(){
+        return repository.getEventsByPast();
+}
 
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
@@ -48,7 +63,7 @@ public class EventController {
     }
 
     @PutMapping("/{id}")
-    public Event updateEvent(@Valid @RequestBody EditEventDTO updateEvent, @PathVariable Integer id ){
+    public Event updateEvent(@Valid @RequestBody EditEventDTO updateEvent, @PathVariable Integer id) {
         Event storedEventDetails = repository.getById(id);
         storedEventDetails.setId(updateEvent.getId());
         storedEventDetails.setEventStartTime(updateEvent.getEventStartTime());
