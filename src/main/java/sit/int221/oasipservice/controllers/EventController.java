@@ -48,11 +48,17 @@ public class EventController {
 //Upcoming
     @GetMapping("/getEventByUpcoming")
     public List<Event> getEventsByUpcoming(){
+        if (repository.getEventsByUpcoming().isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT);
+        }
         return repository.getEventsByUpcoming();
     }
 //Past
     @GetMapping("/getEventByPast")
     public List<Event> getEventsByPast(){
+        if (repository.getEventsByPast().isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT);
+        }
         return repository.getEventsByPast();
 }
 
