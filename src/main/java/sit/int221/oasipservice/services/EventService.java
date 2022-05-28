@@ -3,16 +3,20 @@ package sit.int221.oasipservice.services;
 import org.apache.tomcat.jni.Local;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import sit.int221.oasipservice.dtos.EventDTO;
 import sit.int221.oasipservice.dtos.NewEventDTO;
 import sit.int221.oasipservice.dtos.SimpleEventDTO;
 import sit.int221.oasipservice.entities.Event;
+import sit.int221.oasipservice.entities.EventCategory;
 import sit.int221.oasipservice.repositories.EventRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class EventService {
@@ -29,6 +33,24 @@ public class EventService {
     private ListMapper listMapper;
 
 
+    public List<EventDTO> getAllEventByDTO() {
+        return repository.findAll().stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+
+    private EventDTO convertEntityToDto(Event event) {
+        EventDTO eventDTO = new EventDTO();
+        eventDTO.setId(event.getId());
+        eventDTO.setBookingName(event.getBookingName());
+        eventDTO.setBookingEmail(event.getBookingEmail());
+        eventDTO.setEventStartTime(event.getEventStartTime());
+        eventDTO.setEventDuration(event.getEventDuration());
+        eventDTO.setEventNotes(event.getEventNotes());
+        eventDTO.setEventCategoryId(event.getEventCategory().getId());
+        eventDTO.setEventCategoryName(event.getEventCategory().getEventCategoryName());
+        return eventDTO;
+    }
+
+
     public SimpleEventDTO getSimpleEventById(Integer bookingId) {
         Event event = repository.findById(bookingId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND
@@ -36,11 +58,9 @@ public class EventService {
         return modelMapper.map(event, SimpleEventDTO.class);
     }
 
-    public List<Event> getByEventCategory(Integer eventCategoryId){
+    public List<Event> getByEventCategory(Integer eventCategoryId) {
         return repository.getByEventCategory(eventCategoryId);
     }
-
-
 
 
 //    public List<SimpleEventDTO> getEventCatNameBySearch(String eventCategoryName) {

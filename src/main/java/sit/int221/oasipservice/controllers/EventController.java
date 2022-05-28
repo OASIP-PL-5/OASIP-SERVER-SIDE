@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import sit.int221.oasipservice.dtos.EditEventDTO;
+import sit.int221.oasipservice.dtos.EventDTO;
 import sit.int221.oasipservice.dtos.NewEventDTO;
 import sit.int221.oasipservice.dtos.SimpleEventDTO;
 import sit.int221.oasipservice.entities.Event;
@@ -28,10 +29,11 @@ public class EventController {
 
 
     @GetMapping("")
-    public List<Event> getAllEvent() {
-        return repository.findAll(Sort.by
-                (Sort.Direction.DESC, "eventStartTime"));
+    public List<EventDTO> getAllEvent() {
+//         repository.findAll(Sort.by
+//                (Sort.Direction.DESC, "eventStartTime"));
 //        return repository.findAllByOrderByDateAsc();
+        return eventService.getAllEventByDTO();
     }
 
 
@@ -45,22 +47,23 @@ public class EventController {
         return eventService.getByEventCategory(eventCategoryId);
     }
 
-//Upcoming
+    //Upcoming
     @GetMapping("/getEventByUpcoming")
-    public List<Event> getEventsByUpcoming(){
-        if (repository.getEventsByUpcoming().isEmpty()){
+    public List<Event> getEventsByUpcoming() {
+        if (repository.getEventsByUpcoming().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NO_CONTENT);
         }
         return repository.getEventsByUpcoming();
     }
-//Past
+
+    //Past
     @GetMapping("/getEventByPast")
-    public List<Event> getEventsByPast(){
-        if (repository.getEventsByPast().isEmpty()){
+    public List<Event> getEventsByPast() {
+        if (repository.getEventsByPast().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NO_CONTENT);
         }
         return repository.getEventsByPast();
-}
+    }
 
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)

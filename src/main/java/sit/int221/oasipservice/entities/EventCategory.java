@@ -19,7 +19,7 @@ public class EventCategory {
     private Integer id;
 
 //    @UniqueElements(message = "Clinic Name must be unique")
-//    @NotBlank(message = "Clinic Name can not be empty")
+    @NotBlank(message = "Clinic Name can not be empty")
     @NotNull(message = "Clinic Name can not be null")
     @Column(name = "eventCategoryName", nullable = false, length = 100, unique = true)
     private String eventCategoryName;
