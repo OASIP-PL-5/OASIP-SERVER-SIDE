@@ -1,17 +1,13 @@
 package sit.int221.oasipservice.services;
 
-import org.apache.tomcat.jni.Local;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import sit.int221.oasipservice.dtos.EventDTO;
 import sit.int221.oasipservice.dtos.NewEventDTO;
-import sit.int221.oasipservice.dtos.SimpleEventDTO;
 import sit.int221.oasipservice.entities.Event;
-import sit.int221.oasipservice.entities.EventCategory;
 import sit.int221.oasipservice.repositories.EventRepository;
 
 import java.time.LocalDateTime;
@@ -32,11 +28,49 @@ public class EventService {
     @Autowired
     private ListMapper listMapper;
 
-
+// service: get-all-events
     public List<EventDTO> getAllEventByDTO() {
         return repository.findAll().stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
+//  service: get-by-bookingId
+    public List<EventDTO> getSimpleEventById(Integer bookingId) {
+        return repository.findById(bookingId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+
+//    service: filter-by-eventCategoryId
+    public List<EventDTO> getByEventCategory(Integer eventCategoryId) {
+        if (repository.getByEventCategory(eventCategoryId).isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT);
+        }
+        return repository.getByEventCategory(eventCategoryId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+
+//    service: filter-by-upcoming
+    public List<EventDTO> getEventsByUpcoming(){
+        if (repository.getEventsByUpcoming().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT);
+        }
+        return repository.getEventsByUpcoming().stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+
+//    service: filter-by-past
+    public List<EventDTO> getEventsByPast(){
+        if (repository.getEventsByPast().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT);
+        }
+        return repository.getEventsByPast().stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+
+//    service: filter-by-specificDate
+    public List<EventDTO> getEventsByEventStartTime(String eventStartTime){
+        if (repository.getEventsByEventStartTime(eventStartTime).isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT);
+        }
+        return repository.getEventsByEventStartTime(eventStartTime).stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+
+//    serviceMethod: convert-Entity-to-DTO (ใช้งานใน serviceMethod เกี่ยวกับการ GET-EVENTS ทั้งสิ้น )
     private EventDTO convertEntityToDto(Event event) {
         EventDTO eventDTO = new EventDTO();
         eventDTO.setId(event.getId());
@@ -50,19 +84,6 @@ public class EventService {
         return eventDTO;
     }
 
-
-    public SimpleEventDTO getSimpleEventById(Integer bookingId) {
-        Event event = repository.findById(bookingId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND
-                        , "Booking Id: " + bookingId + "doesn't exist"));
-        return modelMapper.map(event, SimpleEventDTO.class);
-    }
-
-    public List<Event> getByEventCategory(Integer eventCategoryId) {
-        return repository.getByEventCategory(eventCategoryId);
-    }
-
-
 //    public List<SimpleEventDTO> getEventCatNameBySearch(String eventCategoryName) {
 //        Event event = repository.findCategoryByName(eventCategoryName)
 //                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND
@@ -71,10 +92,10 @@ public class EventService {
 //    }
 
 
-    public List<SimpleEventDTO> getEvents() {
-        List<Event> eventList = repository.findAll();
-        return listMapper.mapList(eventList, SimpleEventDTO.class, modelMapper);
-    }
+//    public List<SimpleEventDTO> getEvents() {
+//        List<Event> eventList = repository.findAll();
+//        return listMapper.mapList(eventList, SimpleEventDTO.class, modelMapper);
+//    }
 
 //    @ResponseStatus(HttpStatus.BAD_REQUEST)
 //    @ExceptionHandler(MethodArgumentNotValidException.class)
