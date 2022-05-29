@@ -1,9 +1,14 @@
 package sit.int221.oasipservice.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import javax.persistence.*;
+import javax.servlet.annotation.HttpConstraint;
+import javax.validation.constraints.*;
+import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "event")
@@ -13,35 +18,43 @@ public class Event {
     @Column(name = "bookingId", nullable = false)
     private Integer id;
 
-    @Column(name = "bookingName", nullable = false, length = 50)
+    @NotBlank(message = "Booking name must not be empty.")
+    @NotNull(message = "Booking name is required.")
+    @Column(name = "bookingName", nullable = false, length = 100)
     private String bookingName;
 
+    @NotBlank(message = "Booking email must not be empty.")
+    @NotNull(message = "Booking email is required.")
+    @Email(message = "Please insert a valid email format.")
     @Column(name = "bookingEmail", nullable = false, length = 50)
     private String bookingEmail;
 
+    @NotNull(message = "Please choose your appointment date.")
+    @FutureOrPresent(message = "Booking date must be future or present.")
     @Column(name = "eventStartTime", nullable = false)
-    private Instant eventStartTime;
+    private LocalDateTime eventStartTime;
 
     @Column(name = "eventDuration", nullable = false)
     private Integer eventDuration;
 
-    @Column(name = "eventNotes", nullable = false, length = 500)
+    @Column(name = "eventNotes", nullable = true, length = 500)
     private String eventNotes;
 
     @JsonIgnore
+    @NotNull(message = "Please choose Clinic Category date.")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "eventCategoryId", nullable = false)
     private EventCategory eventCategory;
 
     @Column(name = "eventCategory", nullable = false, length = 100)
-    private String eventCategory1;
+    private String eventCategoryName;
 
-    public String getEventCategory1() {
-        return eventCategory1;
+    public String getEventCategoryName() {
+        return eventCategoryName;
     }
 
-    public void setEventCategory1(String eventCategory1) {
-        this.eventCategory1 = eventCategory1;
+    public void setEventCategoryName(String eventCategoryName) {
+        this.eventCategoryName = eventCategoryName;
     }
 
     public EventCategory getEventCategory() {
@@ -68,11 +81,11 @@ public class Event {
         this.eventDuration = eventDuration;
     }
 
-    public Instant getEventStartTime() {
+    public LocalDateTime getEventStartTime() {
         return eventStartTime;
     }
 
-    public void setEventStartTime(Instant eventStartTime) {
+    public void setEventStartTime(LocalDateTime eventStartTime) {
         this.eventStartTime = eventStartTime;
     }
 
@@ -99,4 +112,6 @@ public class Event {
     public void setId(Integer id) {
         this.id = id;
     }
+
+
 }
