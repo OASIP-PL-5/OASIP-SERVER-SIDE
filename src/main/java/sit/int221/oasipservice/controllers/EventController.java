@@ -12,7 +12,6 @@ import sit.int221.oasipservice.repositories.EventRepository;
 import sit.int221.oasipservice.services.EventService;
 
 import javax.validation.Valid;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController

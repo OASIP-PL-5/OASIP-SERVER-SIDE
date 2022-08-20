@@ -10,7 +10,6 @@ import sit.int221.oasipservice.dtos.NewEventDTO;
 import sit.int221.oasipservice.entities.Event;
 import sit.int221.oasipservice.repositories.EventRepository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
