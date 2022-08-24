@@ -1,18 +1,13 @@
 package sit.int221.oasipservice.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
+import sit.int221.oasipservice.EnumRole;
+import sit.int221.oasipservice.annotation.ValidateEnum;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.Instant;
-import java.util.Date;
 
 @Entity
 @Table(name = "user")
@@ -22,16 +17,23 @@ public class User {
     @Column(name = "userId", nullable = false)
     private Integer id;
 
-    @NotNull
-    @NotBlank
+    @NotNull(message = "name cannot be null")
+    @NotBlank(message = "name cannot be blank")
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
+    @NotNull(message = "email cannot be null")
+    @NotBlank(message = "email cannot be blank")
     @Email(message = "Please insert a valid email format.")
     @Column(name = "email", nullable = false, length = 50)
     private String email;
 
-    @Lob
+//    @ValidatedString(values = {"student", "lecturer", "admin"}, message = "There are only student,lecturer and admin roles")
+//    @Enumerated(EnumType.STRING)
+//    @StringEnumeration(enumClass = EnumRole.class)
+    @NotNull(message = "role cannot be null")
+    @NotBlank(message = "role cannot be blank")
+    @ValidateEnum(targetClassType = EnumRole.class, message = "Invalid role! there are only student,lecturer and admin role")
     @Column(name = "role", nullable = false)
     private String role;
 
@@ -39,11 +41,12 @@ public class User {
 //    @JsonInclude(JsonInclude.Include.NON_NULL)
 //    @Basic
 //    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "createdOn", nullable = false, insertable = false)
+
+    @Column(name = "createdOn", nullable = false, insertable = false,unique = true)
     private Instant createdOn;
 
-//    @UpdateTimestamp
-    @Column(name = "updatedOn", nullable = false, updatable = false, insertable = false)
+    //    @UpdateTimestamp
+    @Column(name = "updatedOn", nullable = false, updatable = false, insertable = false,unique = true)
     private Instant updatedOn;
 
     public Instant getUpdatedOn() {

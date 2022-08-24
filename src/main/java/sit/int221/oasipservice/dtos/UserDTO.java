@@ -1,11 +1,9 @@
 package sit.int221.oasipservice.dtos;
 
 import lombok.*;
-import org.apache.tomcat.jni.Local;
+import sit.int221.oasipservice.EnumRole;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 
 @Getter
 @Setter
