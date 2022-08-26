@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 //import sit.int221.oasipservice.dtos.NewUserDTO;
 import sit.int221.oasipservice.EnumRole;
+import sit.int221.oasipservice.dtos.NewUserDTO;
 import sit.int221.oasipservice.dtos.UserDTO;
 import sit.int221.oasipservice.entities.User;
 import sit.int221.oasipservice.repositories.UserRepository;
@@ -41,7 +42,7 @@ public class UserController {
     //    add new user
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
-    public User createUser(@Valid @RequestBody UserDTO newUser) {
+    public User createUser(@Valid @RequestBody User newUser) {
         return userService.save(newUser);
     }
 

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import sit.int221.oasipservice.dtos.EventDTO;
 //import sit.int221.oasipservice.dtos.NewUserDTO;
+import sit.int221.oasipservice.dtos.NewUserDTO;
 import sit.int221.oasipservice.dtos.UserDTO;
 import sit.int221.oasipservice.entities.Event;
 import sit.int221.oasipservice.entities.User;
@@ -30,6 +31,9 @@ public class UserService {
     @Autowired
     private ListMapper listMapper;
 
+    @Autowired
+    private  PasswordService passwordService;
+
     public List<UserDTO> getAllUserByDTO() {
         return repository.findAll(Sort.by(Sort.Direction.ASC, "name")).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
@@ -40,12 +44,23 @@ public class UserService {
 
    // service for add-user
 
-    public User save(UserDTO newUser) {
-        User user = modelMapper.map(newUser, User.class);
-        return repository.saveAndFlush(user);
+    public User save(User user) {
+        //  วิธีนี้เก่าแล้ว เราไม่ทำ
+//        User user = modelMapper.map(newUser, User.class);
+//        return repository.saveAndFlush(user);
+
+// ต้องใช้ วิธีที่เรียกจาก entity เลย เพราะวิธีอื่นยังทำไม่ได้
+        user.setName(user.getName());
+        user.setEmail(user.getEmail());
+        user.setRole(user.getRole());
+// for-password
+        user.setPassword(passwordService.securePassword(user.getPassword()));
+
+        User savedUser= repository.save(user);
+        savedUser.setPassword("**********");
+        return savedUser;
     }
 
-//    public ResponseEntity save(UserDTO newUser) {
 //        newUser.setRole(newUser.getRole().trim().toLowerCase());
 //        if (newUser.getRole() == "admin" ) {
 //            return new ResponseEntity<>("There are only student,lecturer and admin roles please try again", HttpStatus.INTERNAL_SERVER_ERROR);
