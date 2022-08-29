@@ -1,5 +1,7 @@
 package sit.int221.oasipservice.services;
 
+import de.mkammerer.argon2.Argon2;
+import de.mkammerer.argon2.Argon2Factory;
 import org.apache.catalina.valves.rewrite.InternalRewriteMap;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import sit.int221.oasipservice.dtos.EventDTO;
 //import sit.int221.oasipservice.dtos.NewUserDTO;
+import sit.int221.oasipservice.dtos.MatchPasswordDTO;
 import sit.int221.oasipservice.dtos.NewUserDTO;
 import sit.int221.oasipservice.dtos.UserDTO;
 import sit.int221.oasipservice.entities.Event;
@@ -32,7 +35,7 @@ public class UserService {
     private ListMapper listMapper;
 
     @Autowired
-    private  PasswordService passwordService;
+    private PasswordService passwordService;
 
     public List<UserDTO> getAllUserByDTO() {
         return repository.findAll(Sort.by(Sort.Direction.ASC, "name")).stream().map(this::convertEntityToDto).collect(Collectors.toList());
@@ -43,32 +46,53 @@ public class UserService {
     }
 
    // service for add-user
+   @Deprecated
+   public User save(User newUser) {
+       Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id,16,16);
+       String hash = argon2.hash(2, 16, 1, newUser.getPassword());
+//        hash(int iterations, int memory, int parallelism, char[] password)
+       newUser.setPassword(hash);
+       return repository.save(newUser);
+   }
 
-    public User save(User user) {
-        //  วิธีนี้เก่าแล้ว เราไม่ทำ
-//        User user = modelMapper.map(newUser, User.class);
-//        return repository.saveAndFlush(user);
-
-// ต้องใช้ วิธีที่เรียกจาก entity เลย เพราะวิธีอื่นยังทำไม่ได้
-        user.setName(user.getName());
-        user.setEmail(user.getEmail());
-        user.setRole(user.getRole());
-// for-password
-        user.setPassword(passwordService.securePassword(user.getPassword()));
-
-        User savedUser= repository.save(user);
-        savedUser.setPassword("**********");
-        return savedUser;
+   //method for email/password authentication return with http status code
+    public ResponseEntity checkLogin(MatchPasswordDTO matchPasswordDTO) {
+        //get user by email
+        User user = repository.findByEmail(matchPasswordDTO.getEmail());
+        //check if user is null, return 404
+        if (user == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        //check password
+        Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id, 16, 16);
+        boolean isPasswordCorrect = argon2.verify(user.getPassword(), matchPasswordDTO.getPassword().toCharArray());
+        //if password is correct, return 200
+        if (isPasswordCorrect) {
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        //if password is incorrect, return 401
+        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
 
-//        newUser.setRole(newUser.getRole().trim().toLowerCase());
-//        if (newUser.getRole() == "admin" ) {
-//            return new ResponseEntity<>("There are only student,lecturer and admin roles please try again", HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//        User user = modelMapper.map(newUser, User.class);
-//        repository.saveAndFlush(user);
-//        return ResponseEntity.status(HttpStatus.OK).body(user);
+
+
+//    public User save(User user) {
+//        //  วิธีนี้เก่าแล้ว เราไม่ทำ
+////        User user = modelMapper.map(newUser, User.class);
+////        return repository.saveAndFlush(user);
+//
+//// ต้องใช้ วิธีที่เรียกจาก entity เลย เพราะวิธีอื่นยังทำไม่ได้
+//        user.setName(user.getName());
+//        user.setEmail(user.getEmail());
+//        user.setRole(user.getRole());
+//// for-password
+//        user.setPassword(passwordService.securePassword(user.getPassword()));
+//
+//        User savedUser= repository.save(user);
+//        savedUser.setPassword("**********");
+//        return savedUser;
 //    }
+
 
     // ไว้ล่างสุด !!!
     //    serviceMethod: convert-Entity-to-DTO (ใช้งานใน serviceMethod เกี่ยวกับการ GET-users ทั้งสิ้น )
@@ -82,5 +106,7 @@ public class UserService {
         userDTO.setUpdatedOn(user.getUpdatedOn());
         return userDTO;
     }
+
+
 
 }

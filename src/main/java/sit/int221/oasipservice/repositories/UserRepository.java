@@ -9,14 +9,16 @@ import sit.int221.oasipservice.entities.User;
 
 import javax.transaction.Transactional;
 import java.time.Instant;
+import java.util.List;
 
 public interface UserRepository extends JpaRepository<User, Integer> {
 
-    @Modifying
     @Query(
-            value = "INSERT INTO user(name,email,role) values(:n,:e,:r)", nativeQuery = true
+            value = "SELECT * FROM user where email = :e", nativeQuery = true
     )
-    @Transactional
-    void addUser(@Param("n") String name, @Param("e") String email, @Param("r") String role);
+    User findByEmail(@Param("e") String email);
+
+
+
 
 }

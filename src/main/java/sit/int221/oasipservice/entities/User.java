@@ -49,6 +49,7 @@ public class User {
     @Column(name = "updatedOn", nullable = false, updatable = false, insertable = false,unique = true)
     private Instant updatedOn;
 
+
     @Column(name = "password", nullable = false, length = 90)
     private String password;
 

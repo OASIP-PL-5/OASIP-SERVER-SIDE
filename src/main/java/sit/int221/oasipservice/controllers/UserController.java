@@ -3,11 +3,11 @@ package sit.int221.oasipservice.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 //import sit.int221.oasipservice.dtos.NewUserDTO;
-import sit.int221.oasipservice.EnumRole;
-import sit.int221.oasipservice.dtos.NewUserDTO;
+import sit.int221.oasipservice.dtos.MatchPasswordDTO;
 import sit.int221.oasipservice.dtos.UserDTO;
 import sit.int221.oasipservice.entities.User;
 import sit.int221.oasipservice.repositories.UserRepository;
@@ -33,6 +33,7 @@ public class UserController {
         return userService.getAllUserByDTO();
     }
 
+
     //    Get user-by-id
     @GetMapping("/{id}")
     public List<UserDTO> getSimpleUserDTO(@PathVariable Integer id) {
@@ -40,6 +41,7 @@ public class UserController {
     }
 
     //    add new user
+    @Deprecated
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
     public User createUser(@Valid @RequestBody User newUser) {
@@ -65,4 +67,24 @@ public class UserController {
                 new ResponseStatusException(HttpStatus.NOT_FOUND, id + " does not exist !"));
         repository.deleteById(id);
     }
+
+//    check-login user
+//    @PostMapping("")
+//    @ResponseStatus(HttpStatus.FOUND)
+
+    //    check-login user
+//    @PostMapping("/login")
+//    @ResponseStatus(HttpStatus.FOUND)
+//    public UserDTO login(@Valid @RequestBody MatchPasswordDTO matchPassword) {
+//        return userService.checkLogin(matchPassword);
+//    }
+
+    //use post method to match password by using checkLogin method in UserService
+//    @PostMapping("")
+//    public ResponseEntity checkLogin(@Valid @RequestBody MatchPasswordDTO matchPasswordDTO) {
+//        return userService.checkLogin(matchPasswordDTO);
+//    }
+
+
+
 }
