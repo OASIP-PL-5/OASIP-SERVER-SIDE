@@ -25,7 +25,7 @@ public interface EventRepository extends JpaRepository<Event, Integer>, JpaSpeci
     List<Event> getEventsByPast();
 
     //    filter specific date
-    @Query(value = "select * from event e where e.eventStartTime = :t", nativeQuery = true)
+    @Query(value = "select * from event e where DATE(e.eventStartTime) = :t", nativeQuery = true)
     List<Event> getEventsByEventStartTime(@Param("t") String eventStartTime);
 
 
