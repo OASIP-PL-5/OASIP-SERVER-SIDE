@@ -4,6 +4,7 @@ package sit.int221.oasipservice.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 //import sit.int221.oasipservice.dtos.NewUserDTO;
@@ -12,6 +13,7 @@ import sit.int221.oasipservice.dtos.UserDTO;
 import sit.int221.oasipservice.entities.User;
 import sit.int221.oasipservice.repositories.UserRepository;
 import sit.int221.oasipservice.services.UserService;
+import sit.int221.oasipservice.utils.JwtUtility;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -22,6 +24,12 @@ public class UserController {
     @Autowired
     private UserService userService;
     private final UserRepository repository;
+
+//    @Autowired
+//    private JwtUtility jwtUtility;
+//
+//    @Autowired
+//    private AuthenticationManager authenticationManager;
 
     public UserController(UserRepository repository) {
         this.repository = repository;

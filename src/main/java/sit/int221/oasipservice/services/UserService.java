@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import sit.int221.oasipservice.dtos.EventDTO;
@@ -19,12 +22,13 @@ import sit.int221.oasipservice.entities.Event;
 import sit.int221.oasipservice.entities.User;
 import sit.int221.oasipservice.repositories.UserRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
     @Autowired
     private UserRepository repository;
 
@@ -45,17 +49,17 @@ public class UserService {
         return repository.findById(id).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
-   // service for add-user
-   @Deprecated
-   public User save(User newUser) {
-       Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id,16,16);
-       String hash = argon2.hash(2, 16, 1, newUser.getPassword());
+    // service for add-user
+    @Deprecated
+    public User save(User newUser) {
+        Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id, 16, 16);
+        String hash = argon2.hash(2, 16, 1, newUser.getPassword());
 //        hash(int iterations, int memory, int parallelism, char[] password)
-       newUser.setPassword(hash);
-       return repository.save(newUser);
-   }
+        newUser.setPassword(hash);
+        return repository.save(newUser);
+    }
 
-   //method for email/password authentication return with http status code
+    //method for email/password authentication return with http status code
     public ResponseEntity checkLogin(MatchPasswordDTO matchPasswordDTO) {
         //get user by email
         User user = repository.findByEmail(matchPasswordDTO.getEmail());
@@ -73,7 +77,6 @@ public class UserService {
         //if password is incorrect, return 401
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
-
 
 
 //    public User save(User user) {
@@ -107,6 +110,8 @@ public class UserService {
         return userDTO;
     }
 
-
-
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return new org.springframework.security.core.userdetails.User("admin", "password", new ArrayList<>());
+    }
 }
