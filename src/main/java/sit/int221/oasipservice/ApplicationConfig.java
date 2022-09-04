@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import sit.int221.oasipservice.services.ListMapper;
 
 import java.nio.charset.Charset;
@@ -24,6 +25,11 @@ public class ApplicationConfig {
     public ListMapper listMapper() {
         return ListMapper.getInstance();
     }
+
+//    @Bean
+//    public BCryptPasswordEncoder bCryptPasswordEncoder() {
+//        return new BCryptPasswordEncoder();
+//    }
 
     @Bean
     public Argon2 argon2() {

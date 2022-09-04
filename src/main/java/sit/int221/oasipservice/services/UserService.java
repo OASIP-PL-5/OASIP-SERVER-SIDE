@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import sit.int221.oasipservice.dtos.EventDTO;
 //import sit.int221.oasipservice.dtos.NewUserDTO;
@@ -111,7 +112,24 @@ public class UserService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return new org.springframework.security.core.userdetails.User("admin", "password", new ArrayList<>());
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        // Use email as username
+        User user = repository.findByEmail(email);
+        // If user with entered email not found, throw exception
+        if (user == null) {
+            throw new UsernameNotFoundException("User with email " + email + " not found");
+        }
+        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), new ArrayList<>());
+//        if (user == null) {
+//            throw new UsernameNotFoundException("User not found with email: " + email);
+//        }
+//        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), new ArrayList<>());
+
+//        User user = repository.findByEmail(email);
+//        if (user == null) {
+//            throw new UsernameNotFoundException("User not found with email: " + email);
+//        }
+//        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), new ArrayList<>());
+
     }
 }

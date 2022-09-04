@@ -32,8 +32,8 @@ public class PasswordService {
 //
 
 
-        private  PasswordConfig passwordConfig;
-    private  Argon2 argon2;
+    private PasswordConfig passwordConfig;
+    private Argon2 argon2;
 
     public PasswordService(PasswordConfig passwordConfig) {
         this.passwordConfig = passwordConfig;
@@ -51,7 +51,7 @@ public class PasswordService {
 
     private Argon2 getArgon2Instance() {
         Argon2Factory.Argon2Types type = Argon2Factory.Argon2Types.ARGON2d;
-        if (passwordConfig.getType() == 1)  {
+        if (passwordConfig.getType() == 1) {
             type = Argon2Factory.Argon2Types.ARGON2i;
         } else if (passwordConfig.getType() == 2) {
             type = Argon2Factory.Argon2Types.ARGON2id;

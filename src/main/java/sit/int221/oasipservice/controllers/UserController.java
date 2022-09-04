@@ -13,7 +13,6 @@ import sit.int221.oasipservice.dtos.UserDTO;
 import sit.int221.oasipservice.entities.User;
 import sit.int221.oasipservice.repositories.UserRepository;
 import sit.int221.oasipservice.services.UserService;
-import sit.int221.oasipservice.utils.JwtUtility;
 
 import javax.validation.Valid;
 import java.util.List;
