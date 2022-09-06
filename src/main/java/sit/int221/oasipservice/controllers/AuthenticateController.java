@@ -34,14 +34,14 @@ public class AuthenticateController {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            jwtRequestz.getUsername(),
+                            jwtRequestz.getEmail(),
                             jwtRequestz.getPassword()
                     )
             );
         } catch (BadCredentialsException e) {
             throw new Exception("Invalid credentials", e);
         }
-        final UserDetails userDetail = userService.loadUserByUsername(jwtRequestz.getUsername());
+        final UserDetails userDetail = userService.loadUserByUsername(jwtRequestz.getEmail());
 
         final String token = jwtUtility.generateToken(userDetail);
 

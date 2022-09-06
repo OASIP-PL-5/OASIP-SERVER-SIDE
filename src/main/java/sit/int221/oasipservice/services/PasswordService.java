@@ -5,6 +5,7 @@ import de.mkammerer.argon2.Argon2Factory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import sit.int221.oasipservice.dtos.MatchPasswordDTO;
 import sit.int221.oasipservice.entities.User;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Service
-public class PasswordService {
+public class PasswordService implements PasswordEncoder {
 //    @Autowired
 //    UserRepository userRepository;
 //
@@ -57,6 +58,21 @@ public class PasswordService {
             type = Argon2Factory.Argon2Types.ARGON2id;
         }
         return Argon2Factory.create(type, passwordConfig.getSaltLength(), passwordConfig.getHashLength());
+    }
+
+//    --------------------------------------
+
+    private final static Argon2 ARGON_2 = Argon2Factory.create();
+
+    @Override
+    public String encode(CharSequence rawPassword) {
+        return ARGON_2.hash(2, 512, 1, rawPassword.toString());
+    }
+
+    @Deprecated
+    @Override
+    public boolean matches(CharSequence rawPassword, String encodedPassword) {
+        return ARGON_2.verify(rawPassword.toString(), encodedPassword);
     }
 //
 //    @Autowired

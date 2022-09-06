@@ -1,5 +1,6 @@
 package sit.int221.oasipservice.entities;
 
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import sit.int221.oasipservice.EnumRole;
 import sit.int221.oasipservice.annotation.ValidateEnum;
 
@@ -108,4 +109,5 @@ public class User {
     public void setId(Integer id) {
         this.id = id;
     }
+
 }
