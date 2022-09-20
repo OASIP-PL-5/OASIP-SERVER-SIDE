@@ -2,7 +2,7 @@ package sit.int221.oasipservice.services;
 
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
-import org.apache.catalina.valves.rewrite.InternalRewriteMap;
+import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -12,22 +12,16 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
-import sit.int221.oasipservice.dtos.EventDTO;
 //import sit.int221.oasipservice.dtos.NewUserDTO;
 import sit.int221.oasipservice.dtos.MatchPasswordDTO;
-import sit.int221.oasipservice.dtos.NewUserDTO;
 import sit.int221.oasipservice.dtos.UserDTO;
-import sit.int221.oasipservice.entities.Event;
 import sit.int221.oasipservice.entities.User;
 import sit.int221.oasipservice.repositories.UserRepository;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.stream.Collectors;
 
+@AllArgsConstructor
 @Service
 public class UserService implements UserDetailsService {
     @Autowired
@@ -49,6 +43,8 @@ public class UserService implements UserDetailsService {
     public List<UserDTO> getUserById(Integer id) {
         return repository.findById(id).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
+
+
 
     // service for add-user
     @Deprecated
@@ -111,25 +107,17 @@ public class UserService implements UserDetailsService {
         return userDTO;
     }
 
+
+
+//    for login and gen jwt-token "api/login"
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        // Use email as username
-        User user = repository.findByEmail(email);
-        // If user with entered email not found, throw exception
-        if (user == null) {
-            throw new UsernameNotFoundException("User with email " + email + " not found");
-        }
-        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), new ArrayList<>());
-//        if (user == null) {
-//            throw new UsernameNotFoundException("User not found with email: " + email);
-//        }
-//        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), new ArrayList<>());
-
-//        User user = repository.findByEmail(email);
-//        if (user == null) {
-//            throw new UsernameNotFoundException("User not found with email: " + email);
-//        }
-//        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), new ArrayList<>());
-
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+//        return new org.springframework.security.core.userdetails.User("admin", "password", new ArrayList<>());
+//
+//        ทำการ findByEmail เพื่อนำ email ไปเทียบ password (ติดแค่ตรง ตอน login มันยังไม่แปลง password-argon2 เป็น raw ให้)
+        User user = repository.findByEmail(username);
+//        argon2 สำหรับการ verify password 
+//        Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id, 16, 16);
+        return new org.springframework.security.core.userdetails.User(user.getEmail(),user.getPassword(), Collections.emptyList());
     }
 }

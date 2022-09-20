@@ -1,6 +1,6 @@
 package sit.int221.oasipservice.entities;
 
-import org.hibernate.validator.constraints.Length;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import sit.int221.oasipservice.EnumRole;
 import sit.int221.oasipservice.annotation.ValidateEnum;
 
@@ -8,13 +8,11 @@ import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import java.io.Serializable;
 import java.time.Instant;
 
 @Entity
 @Table(name = "user")
-public class User implements Serializable {
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "userId", nullable = false)
@@ -51,9 +49,6 @@ public class User implements Serializable {
     //    @UpdateTimestamp
     @Column(name = "updatedOn", nullable = false, updatable = false, insertable = false,unique = true)
     private Instant updatedOn;
-
-//    @Size(min = 8 , max = 14, message = "password must be between 8 and 14 characters")
-//    @Length(min = 8 , max = 14, message = "password must be between 8 and 14 characters")
 
 
     @Column(name = "password", nullable = false, length = 90)
@@ -114,4 +109,5 @@ public class User implements Serializable {
     public void setId(Integer id) {
         this.id = id;
     }
+
 }
