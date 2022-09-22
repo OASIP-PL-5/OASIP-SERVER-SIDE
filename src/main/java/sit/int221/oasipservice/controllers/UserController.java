@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 //import sit.int221.oasipservice.dtos.NewUserDTO;
@@ -35,9 +37,14 @@ public class UserController {
         this.repository = repository;
     }
 
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
     // Get all-users
     @GetMapping("")
-    public List<UserDTO> getAllUser() {
+    public List<UserDTO> getAllUser() throws Exception {
+
+
         return userService.getAllUserByDTO();
     }
 
@@ -92,7 +99,6 @@ public class UserController {
 //    public ResponseEntity checkLogin(@Valid @RequestBody MatchPasswordDTO matchPasswordDTO) {
 //        return userService.checkLogin(matchPasswordDTO);
 //    }
-
 
 
 }

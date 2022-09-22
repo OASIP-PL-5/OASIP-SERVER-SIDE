@@ -4,8 +4,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -13,13 +16,15 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 //import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 //import sit.int221.oasipservice.exceptions.CustomAuthenticationFailureHandler;
 import sit.int221.oasipservice.filters.JwtFilter;
 import sit.int221.oasipservice.services.UserService;
 
 @Configuration
-@EnableWebSecurity
+//@EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
 
     @Autowired
@@ -60,25 +65,36 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 //public endpoints
                 .antMatchers("/api/login").permitAll()
                 .antMatchers(HttpMethod.GET,"/api/event-categories/**").permitAll()
+
                 .antMatchers("/api/events/**").permitAll()
                 .antMatchers("/api/match").permitAll()
+                // ใช้ได้เฉพาะมี token ถึงจะเข้า /users ได้
+                .antMatchers(HttpMethod.GET,"/api/users").permitAll()
                 .antMatchers(HttpMethod.POST,"/api/users").permitAll()
                 .antMatchers(HttpMethod.GET,"/api/events/{id}").permitAll()
 
 
 
+
                 //privilege endpoint
+                .antMatchers("/api/**").hasRole(EnumRole.admin.name())
 //                .antMatchers("/api/**").hasAnyRole(String.valueOf(EnumRole.admin))
 //                .antMatchers(HttpMethod.POST,"/api/event-categories/**").hasAnyRole(String.valueOf(EnumRole.admin))
 //                .antMatchers(HttpMethod.PUT,"/api/event-categories/**").hasAnyRole(String.valueOf(EnumRole.admin))
-                .antMatchers("/api/**").hasRole("admin")
+//                .antMatchers("/api/**").hasRole("admin")
+                // authenticated request can access /api/users
 //                .antMatchers(HttpMethod.POST,"/api/users/**").hasAnyRole("ADMIN")
 //                .antMatchers(HttpMethod.PUT,"/api/users/**").hasAnyRole("ADMIN")
 //                .antMatchers(HttpMethod.DELETE,"/api/users/**").hasAnyRole("ADMIN")
 
 
                 .anyRequest().authenticated()
-                .and().sessionManagement()
+                .and()
+                .exceptionHandling()
+                //บังคับให้ request ที่ไม่ได้ authen เป็น 401 ให้หมด (เดิมเป็น 403)
+                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                .and()
+                .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
