@@ -3,10 +3,13 @@ package sit.int221.oasipservice.utils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import sit.int221.oasipservice.entities.User;
+import sit.int221.oasipservice.repositories.UserRepository;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -18,6 +21,10 @@ import java.util.function.Function;
 public class JwtUtility implements Serializable {
     private static final long serialVersionUID = -2550185165626007488L;
     private static final long JWT_TOKEN_VALIDITY = 10 * 60 * 60;
+
+
+   @Autowired
+   private UserRepository userRepository;
 
     private String secret = "secret";
 
@@ -50,7 +57,10 @@ public class JwtUtility implements Serializable {
     }
 
     private String doGenerateToken(Map<String, Object> claims, String subject) {
-        return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
+       User getUser = userRepository.findByEmail(subject);
+        return Jwts.builder().setSubject(subject)
+                .claim("role",getUser.getRole())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
                 .signWith(SignatureAlgorithm.HS512, secret).compact();
     }
