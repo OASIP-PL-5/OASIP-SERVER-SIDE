@@ -45,7 +45,6 @@ public class UserService implements UserDetailsService {
     }
 
 
-
     // service for add-user
     @Deprecated
     public User save(User newUser) {
@@ -108,8 +107,7 @@ public class UserService implements UserDetailsService {
     }
 
 
-
-//    for login and gen jwt-token "api/login"
+    //    for login and gen jwt-token "api/login"
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 //        return new org.springframework.security.core.userdetails.User("admin", "password", new ArrayList<>());
@@ -118,6 +116,8 @@ public class UserService implements UserDetailsService {
         User user = repository.findByEmail(username);
 //        argon2 สำหรับการ verify password 
 //        Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id, 16, 16);
-        return new org.springframework.security.core.userdetails.User(user.getEmail(),user.getPassword(), Collections.emptyList());
+
+
+        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), Collections.emptyList());
     }
 }

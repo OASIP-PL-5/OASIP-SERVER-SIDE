@@ -4,7 +4,10 @@ package sit.int221.oasipservice.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 //import sit.int221.oasipservice.dtos.NewUserDTO;
@@ -15,6 +18,7 @@ import sit.int221.oasipservice.repositories.UserRepository;
 import sit.int221.oasipservice.services.UserService;
 import sit.int221.oasipservice.utils.JwtUtility;
 
+import javax.annotation.security.RolesAllowed;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -35,9 +39,14 @@ public class UserController {
         this.repository = repository;
     }
 
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
     // Get all-users
     @GetMapping("")
-    public List<UserDTO> getAllUser() {
+    public List<UserDTO> getAllUser() throws Exception {
+
+
         return userService.getAllUserByDTO();
     }
 
@@ -57,6 +66,7 @@ public class UserController {
     }
 
     // edit user
+    @PreAuthorize("hasRole('admin')")
     @PutMapping("/{id}")
     public User updateUser(@Valid @RequestBody UserDTO updateUser, @PathVariable Integer id) {
         User updateUserDetails = repository.getById(id);
@@ -92,7 +102,6 @@ public class UserController {
 //    public ResponseEntity checkLogin(@Valid @RequestBody MatchPasswordDTO matchPasswordDTO) {
 //        return userService.checkLogin(matchPasswordDTO);
 //    }
-
 
 
 }

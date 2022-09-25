@@ -1,6 +1,8 @@
 package sit.int221.oasipservice.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,7 +32,7 @@ public class AuthenticateController {
     private AuthenticationManager authenticationManager;
 
     @PostMapping("")
-    public JwtResponse authenticate(@RequestBody JwtRequest jwtRequestz) throws Exception {
+    public ResponseEntity authenticate(@RequestBody JwtRequest jwtRequestz) throws Exception {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -38,14 +40,20 @@ public class AuthenticateController {
                             jwtRequestz.getPassword()
                     )
             );
-        } catch (BadCredentialsException e) {
-            throw new Exception("Invalid credentials", e);
         }
+        catch (BadCredentialsException e) {
+            return new ResponseEntity(HttpStatus.UNAUTHORIZED);
+        }
+        catch (Exception e) {
+            return new ResponseEntity(HttpStatus.NOT_FOUND);
+        }
+
         final UserDetails userDetail = userService.loadUserByUsername(jwtRequestz.getEmail());
 
         final String token = jwtUtility.generateToken(userDetail);
 
-        return new JwtResponse(token);
+//        return new JwtResponse(token);
+        return ResponseEntity.ok(new JwtResponse(token));
     }
 
 
