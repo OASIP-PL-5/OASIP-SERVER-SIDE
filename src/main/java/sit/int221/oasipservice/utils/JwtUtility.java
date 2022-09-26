@@ -1,37 +1,28 @@
 package sit.int221.oasipservice.utils;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import sit.int221.oasipservice.entities.User;
 import sit.int221.oasipservice.repositories.UserRepository;
 
 import java.io.Serializable;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtUtility implements Serializable {
     private static final long serialVersionUID = -2550185165626007488L;
-    //2*30*30 = 1800 seconds = 30 minutes
-    private static final long JWT_TOKEN_VALIDITY_ACCESS = 2 * 30 * 30;
+    private static final long JWT_TOKEN_VALIDITY = 1 * 30 * 60;
+    //private static final long JWT_TOKEN_VALIDITY = 60;
     private static final long JWT_TOKEN_VALIDITY_REFRESH = 24 * 60 * 60;
-
-//    private int refreshExpirationDateInMs;
-//
-//    @Value("${jwt.refreshExpirationDateInMs}")
-//    public void setRefreshExpirationDateInMs(int refreshExpirationDateInMs) {
-//        this.refreshExpirationDateInMs = refreshExpirationDateInMs;
-//    }
-
 
     @Autowired
     private UserRepository userRepository;
@@ -45,7 +36,6 @@ public class JwtUtility implements Serializable {
     public Date getExpirationDateFromToken(String token) {
         return getClaimFromToken(token, Claims::getExpiration);
     }
-
 
     public <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = getAllClaimsFromToken(token);
@@ -69,32 +59,41 @@ public class JwtUtility implements Serializable {
     private String doGenerateToken(Map<String, Object> claims, String subject) {
         User getUser = userRepository.findByEmail(subject);
         return Jwts.builder().setSubject(subject)
-                .claim("role", getUser.getRole())
+                .claim("role",getUser.getRole())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY_ACCESS * 1000))
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
                 .signWith(SignatureAlgorithm.HS512, secret).compact();
     }
 
-    public String generateRefreshToken(UserDetails userDetails) {
-        Map<String, Object> claims = new HashMap<>();
-        return doGenerateRefreshToken(claims, userDetails.getUsername());
+    public Boolean validateToken(String token, UserDetails userDetails) {
+        final String username = getUsernameFromToken(token);
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
-    //refresh token is set to expire in 24 hours
-    public String doGenerateRefreshToken(Map<String, Object> claims, String subject) {
+    public String generateRefreshToken(String token) {
+        String email = getUsernameFromToken(token);
+        return doGenerateRefreshToken(new HashMap<>(), email);
+    }
+    private String doGenerateRefreshToken(Map<String, Object> claims, String subject) {
         User getUser = userRepository.findByEmail(subject);
-        return Jwts.builder()
-                .setSubject(subject)
-                .claim("role", getUser.getRole())
+        return Jwts.builder().setSubject(subject)
+                .claim("role",getUser.getRole())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY_REFRESH * 1000))
                 .signWith(SignatureAlgorithm.HS512, secret).compact();
     }
 
+    //    method for authorization by role
+    public UsernamePasswordAuthenticationToken getAuthentication(final String token, final Authentication existingAuth, final UserDetails userDetails){
+        final JwtParser jwtParser = Jwts.parser().setSigningKey(secret);
+        final Jws claimsJws = jwtParser.parseClaimsJws(token);
+        final Claims claims = (Claims) claimsJws.getBody();
+        final Collection authorities =
+                Arrays.stream(claims.get("role").toString().split(","))
+                        .map(SimpleGrantedAuthority::new)
+                        .collect(Collectors.toList());
 
-    public Boolean validateToken(String token, UserDetails userDetails) {
-        final String username = getUsernameFromToken(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        return new UsernamePasswordAuthenticationToken(userDetails, "", authorities);
     }
 
 

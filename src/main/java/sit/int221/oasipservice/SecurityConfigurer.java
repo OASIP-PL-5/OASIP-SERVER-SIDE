@@ -19,13 +19,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 //import sit.int221.oasipservice.exceptions.CustomAuthenticationFailureHandler;
+import sit.int221.oasipservice.entities.User;
 import sit.int221.oasipservice.filters.JwtFilter;
+import sit.int221.oasipservice.repositories.UserRepository;
 import sit.int221.oasipservice.services.UserService;
 
 @Configuration
-//@EnableWebSecurity
+@EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
+
+    private UserRepository userRepository;
 
     @Autowired
     private UserService userService;
@@ -69,15 +73,18 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/events/**").permitAll()
                 .antMatchers("/api/match").permitAll()
                 // ใช้ได้เฉพาะมี token ถึงจะเข้า /users ได้
-                .antMatchers(HttpMethod.GET,"/api/users").permitAll()
+//                .antMatchers(HttpMethod.GET,"/api/users").permitAll()
                 .antMatchers(HttpMethod.POST,"/api/users").permitAll()
                 .antMatchers(HttpMethod.GET,"/api/events/{id}").permitAll()
+                .antMatchers("/api/refresh").permitAll()
 
 
 
 
                 //privilege endpoint
-                .antMatchers("/api/**").hasRole(EnumRole.admin.name())
+                .antMatchers("/api/event-categories/").access("hasAuthority('admin')")
+                .antMatchers(HttpMethod.PUT,"/api/event-categories/{id}").hasAuthority("admin")
+                .antMatchers(HttpMethod.GET,"/api/users").hasAuthority("admin")
 //                .antMatchers("/api/**").hasAnyRole(String.valueOf(EnumRole.admin))
 //                .antMatchers(HttpMethod.POST,"/api/event-categories/**").hasAnyRole(String.valueOf(EnumRole.admin))
 //                .antMatchers(HttpMethod.PUT,"/api/event-categories/**").hasAnyRole(String.valueOf(EnumRole.admin))

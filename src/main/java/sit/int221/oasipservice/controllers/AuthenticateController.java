@@ -3,20 +3,22 @@ package sit.int221.oasipservice.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import sit.int221.oasipservice.dtos.EditEventCateDTO;
+import sit.int221.oasipservice.entities.EventCategory;
 import sit.int221.oasipservice.models.JwtRequest;
 import sit.int221.oasipservice.models.JwtResponse;
 import sit.int221.oasipservice.services.UserService;
 import sit.int221.oasipservice.utils.JwtUtility;
+
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/api/login")
@@ -50,13 +52,14 @@ public class AuthenticateController {
 
         final UserDetails userDetail = userService.loadUserByUsername(jwtRequestz.getEmail());
 
-        final String accessToken = jwtUtility.generateToken(userDetail);
-        final String refreshToken = jwtUtility.generateRefreshToken(userDetail);
+        final String token = jwtUtility.generateToken(userDetail);
+//        final String refreshToken = jwtUtility.generateRefreshToken(jwtRef);
 
 
 //        return new JwtResponse(token);
-        return ResponseEntity.ok(new JwtResponse(accessToken,refreshToken));
+        return ResponseEntity.ok(new JwtResponse(token));
     }
+
 
 
 }
