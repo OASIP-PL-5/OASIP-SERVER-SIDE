@@ -2,13 +2,16 @@ package sit.int221.oasipservice.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import sit.int221.oasipservice.dtos.EditEventDTO;
 import sit.int221.oasipservice.dtos.EventDTO;
 import sit.int221.oasipservice.dtos.NewEventDTO;
 import sit.int221.oasipservice.entities.Event;
+import sit.int221.oasipservice.entities.User;
 import sit.int221.oasipservice.repositories.EventRepository;
+import sit.int221.oasipservice.repositories.UserRepository;
 import sit.int221.oasipservice.services.EventService;
 
 import javax.validation.Valid;
@@ -20,12 +23,18 @@ public class EventController {
     @Autowired
     private EventService eventService;
     private final EventRepository repository;
+    private UserRepository userRepository;
 
-    public EventController(EventRepository repository) {
+
+
+    public EventController(EventRepository repository, UserRepository userRepository) {
         this.repository = repository;
+        this.userRepository = userRepository;
     }
 
-// Get all-events
+
+
+    // Get all-events
     @GetMapping("")
     public List<EventDTO> getAllEvent() {
 //         repository.findAll(Sort.by
@@ -34,13 +43,24 @@ public class EventController {
         return eventService.getAllEventByDTO();
     }
 
-// Get event-by-bookingId
+    // Get event-by-bookingId
     @GetMapping("/{id}")
     public List<EventDTO> getSimpleEventDTO(@PathVariable Integer id) {
-        return eventService.getSimpleEventById(id);
+        //get email from token
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        //get role from token
+        String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
+        User userEmail = userRepository.findByEmail(email);
+        Event storedEventDetails = repository.getById(id);
+        if (storedEventDetails.getBookingEmail().equals(email) || role.contains("admin")) {
+            return eventService.getSimpleEventById(id);
+        } else {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+
     }
 
-//  filter-by-eventCategoryId
+    //  filter-by-eventCategoryId
     @GetMapping("/getByEventCategories/{eventCategoryId}")
     public List<EventDTO> getByEventCategory(@PathVariable Integer eventCategoryId) {
         return eventService.getByEventCategory(eventCategoryId);
@@ -75,19 +95,43 @@ public class EventController {
     //    update event
     @PutMapping("/{id}")
     public Event updateEvent(@Valid @RequestBody EditEventDTO updateEvent, @PathVariable Integer id) {
+        //get email from token
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        //get role from token
+        String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
+        User userEmail = userRepository.findByEmail(email);
         Event storedEventDetails = repository.getById(id);
         storedEventDetails.setId(updateEvent.getId());
         storedEventDetails.setEventStartTime(updateEvent.getEventStartTime());
         storedEventDetails.setEventNotes(updateEvent.getEventNotes());
-        return repository.saveAndFlush(storedEventDetails);
+        //if user email is equal to event email or role is admin then can update
+        if (storedEventDetails.getBookingEmail().equals(email) || role.contains("admin")) {
+            return repository.saveAndFlush(storedEventDetails);
+        } else {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
     }
 
     //   delete event
     @DeleteMapping("/{bookingId}")
     public void delete(@PathVariable Integer bookingId) {
-        repository.findById(bookingId).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, bookingId + " does not exist !"));
-        repository.deleteById(bookingId);
+        //get email from token
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        //get role from token
+        String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
+        User userEmail = userRepository.findByEmail(email);
+        Event storedEventDetails = repository.getById(bookingId);
+        if (storedEventDetails.getBookingEmail().equals(email) || role.contains("admin")) {
+//            return repository.saveAndFlush(storedEventDetails);
+            repository.findById(bookingId).orElseThrow(() ->
+                    new ResponseStatusException(HttpStatus.NOT_FOUND, bookingId + " does not exist !"));
+            repository.deleteById(bookingId);
+        } else {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+//        repository.findById(bookingId).orElseThrow(() ->
+//                new ResponseStatusException(HttpStatus.NOT_FOUND, bookingId + " does not exist !"));
+//        repository.deleteById(bookingId);
     }
 
 
