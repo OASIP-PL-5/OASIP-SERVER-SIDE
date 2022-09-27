@@ -37,10 +37,13 @@ public class EventController {
 // Get all-events
     @GetMapping("")
     public List<EventDTO> getAllEvent() {
-//         repository.findAll(Sort.by
-//                (Sort.Direction.DESC, "eventStartTime"));
-//        return repository.findAllByOrderByDateAsc();
-        return eventService.getAllEventByDTO();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
+        if (role.contains("admin")) {
+            return eventService.getAllEventByDTO();
+        } else {
+            return eventService.getAllUserByEmail();
+        }
     }
 
 // Get event-by-bookingId

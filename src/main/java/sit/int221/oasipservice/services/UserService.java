@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -17,6 +18,7 @@ import sit.int221.oasipservice.dtos.MatchPasswordDTO;
 import sit.int221.oasipservice.dtos.UserDTO;
 import sit.int221.oasipservice.entities.User;
 import sit.int221.oasipservice.repositories.UserRepository;
+import sit.int221.oasipservice.utils.JwtUtility;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -36,9 +38,13 @@ public class UserService implements UserDetailsService {
     @Autowired
     private PasswordService passwordService;
 
+    @Autowired
+    private JwtUtility jwtUtility;
+
     public List<UserDTO> getAllUserByDTO() {
         return repository.findAll(Sort.by(Sort.Direction.ASC, "name")).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
+
 
     public List<UserDTO> getUserById(Integer id) {
         return repository.findById(id).stream().map(this::convertEntityToDto).collect(Collectors.toList());

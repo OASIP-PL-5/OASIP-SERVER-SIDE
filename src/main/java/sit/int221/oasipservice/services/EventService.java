@@ -3,11 +3,14 @@ package sit.int221.oasipservice.services;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import sit.int221.oasipservice.dtos.EventDTO;
 import sit.int221.oasipservice.dtos.NewEventDTO;
+import sit.int221.oasipservice.dtos.UserDTO;
 import sit.int221.oasipservice.entities.Event;
+import sit.int221.oasipservice.entities.User;
 import sit.int221.oasipservice.repositories.EventRepository;
 
 import java.util.List;
@@ -30,6 +33,12 @@ public class EventService {
 // service: get-all-events
     public List<EventDTO> getAllEventByDTO() {
         return repository.findAll().stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+
+    //get all event by email
+    public List<EventDTO> getAllUserByEmail() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return repository.findByEmail(email).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
 //  service: get-by-bookingId
