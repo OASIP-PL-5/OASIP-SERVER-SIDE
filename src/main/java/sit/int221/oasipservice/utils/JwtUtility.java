@@ -10,6 +10,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import sit.int221.oasipservice.entities.User;
+import sit.int221.oasipservice.models.RefreshToken;
 import sit.int221.oasipservice.repositories.UserRepository;
 
 import java.io.Serializable;
@@ -20,8 +21,7 @@ import java.util.stream.Collectors;
 @Component
 public class JwtUtility implements Serializable {
     private static final long serialVersionUID = -2550185165626007488L;
-    private static final long JWT_TOKEN_VALIDITY = 1 * 30 * 60;
-    //private static final long JWT_TOKEN_VALIDITY = 60;
+    private static final long JWT_TOKEN_VALIDITY = 2*30;
     private static final long JWT_TOKEN_VALIDITY_REFRESH = 24 * 60 * 60;
 
     @Autowired
@@ -51,6 +51,25 @@ public class JwtUtility implements Serializable {
         return expiration.before(new Date());
     }
 
+    public String generateNewToken(RefreshToken token) {
+        String email = getUsernameFromToken(token.getToken());
+        return doGenerateToken(new HashMap<>(), email);
+//        Map<String, Object> claims = new HashMap<>();
+//        return doGenerateToken(claims, userDetails.getUsername());
+//        String email = getUsernameFromToken(token.getToken());
+//        return doGenerateRefreshToken(new HashMap<>(), email);
+    }
+
+    //    public String generateRefreshToken(JwtToken token) {
+//        String email = getUsernameFromToken(token.getToken());
+//        return doGenerateRefreshToken(new HashMap<>(), email);
+//    }
+
+    public String generateNewRefreshToken(RefreshToken token) {
+        String email = getUsernameFromToken(token.getToken());
+        return doGenerateToken(new HashMap<>(), email);
+    }
+
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         return doGenerateToken(claims, userDetails.getUsername());
@@ -70,10 +89,14 @@ public class JwtUtility implements Serializable {
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
-    public String generateRefreshToken(String token) {
-        String email = getUsernameFromToken(token);
-        return doGenerateRefreshToken(new HashMap<>(), email);
+    public String generateRefreshToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+        return doGenerateRefreshToken(claims, userDetails.getUsername());
     }
+    //    public String generateRefreshToken(JwtToken token) {
+//        String email = getUsernameFromToken(token.getToken());
+//        return doGenerateRefreshToken(new HashMap<>(), email);
+//    }
     private String doGenerateRefreshToken(Map<String, Object> claims, String subject) {
         User getUser = userRepository.findByEmail(subject);
         return Jwts.builder().setSubject(subject)
