@@ -10,6 +10,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import sit.int221.oasipservice.entities.User;
+import sit.int221.oasipservice.models.JwtToken;
 import sit.int221.oasipservice.repositories.UserRepository;
 
 import java.io.Serializable;
@@ -51,6 +52,25 @@ public class JwtUtility implements Serializable {
         return expiration.before(new Date());
     }
 
+    public String generateNewToken(JwtToken token) {
+        String email = getUsernameFromToken(token.getToken());
+        return doGenerateToken(new HashMap<>(), email);
+//        Map<String, Object> claims = new HashMap<>();
+//        return doGenerateToken(claims, userDetails.getUsername());
+//        String email = getUsernameFromToken(token.getToken());
+//        return doGenerateRefreshToken(new HashMap<>(), email);
+    }
+
+    //    public String generateRefreshToken(JwtToken token) {
+//        String email = getUsernameFromToken(token.getToken());
+//        return doGenerateRefreshToken(new HashMap<>(), email);
+//    }
+
+    public String generateNewRefreshToken(JwtToken token) {
+        String email = getUsernameFromToken(token.getToken());
+        return doGenerateToken(new HashMap<>(), email);
+    }
+
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         return doGenerateToken(claims, userDetails.getUsername());
@@ -70,10 +90,14 @@ public class JwtUtility implements Serializable {
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
-    public String generateRefreshToken(String token) {
-        String email = getUsernameFromToken(token);
-        return doGenerateRefreshToken(new HashMap<>(), email);
+    public String generateRefreshToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+        return doGenerateRefreshToken(claims, userDetails.getUsername());
     }
+//    public String generateRefreshToken(JwtToken token) {
+//        String email = getUsernameFromToken(token.getToken());
+//        return doGenerateRefreshToken(new HashMap<>(), email);
+//    }
     private String doGenerateRefreshToken(Map<String, Object> claims, String subject) {
         User getUser = userRepository.findByEmail(subject);
         return Jwts.builder().setSubject(subject)

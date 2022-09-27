@@ -51,9 +51,9 @@ public class AuthenticateController {
         final UserDetails userDetail = userService.loadUserByUsername(jwtRequestz.getEmail());
 
         final String token = jwtUtility.generateToken(userDetail);
-
+        final String refreshToken = jwtUtility.generateRefreshToken(userDetail);
 //        return new JwtResponse(token);
-        return ResponseEntity.ok(new JwtResponse(token));
+        return ResponseEntity.ok(new JwtResponse(token, refreshToken));
     }
 
 
