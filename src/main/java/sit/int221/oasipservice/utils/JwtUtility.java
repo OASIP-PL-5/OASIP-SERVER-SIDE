@@ -21,8 +21,10 @@ import java.util.stream.Collectors;
 @Component
 public class JwtUtility implements Serializable {
     private static final long serialVersionUID = -2550185165626007488L;
-    private static final long JWT_TOKEN_VALIDITY = 2*30;
+    private static final long JWT_TOKEN_VALIDITY = 2*30*30;
+    //private static final long JWT_TOKEN_VALIDITY = 60;
     private static final long JWT_TOKEN_VALIDITY_REFRESH = 24 * 60 * 60;
+//private static final long JWT_TOKEN_VALIDITY_REFRESH =  60;
 
     @Autowired
     private UserRepository userRepository;
@@ -54,10 +56,6 @@ public class JwtUtility implements Serializable {
     public String generateNewToken(RefreshToken token) {
         String email = getUsernameFromToken(token.getToken());
         return doGenerateToken(new HashMap<>(), email);
-//        Map<String, Object> claims = new HashMap<>();
-//        return doGenerateToken(claims, userDetails.getUsername());
-//        String email = getUsernameFromToken(token.getToken());
-//        return doGenerateRefreshToken(new HashMap<>(), email);
     }
 
     //    public String generateRefreshToken(JwtToken token) {

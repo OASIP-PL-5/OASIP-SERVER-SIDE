@@ -26,21 +26,23 @@ public class EventController {
     private UserRepository userRepository;
 
 
-
     public EventController(EventRepository repository, UserRepository userRepository) {
         this.repository = repository;
         this.userRepository = userRepository;
     }
 
 
-
     // Get all-events
     @GetMapping("")
     public List<EventDTO> getAllEvent() {
-//         repository.findAll(Sort.by
-//                (Sort.Direction.DESC, "eventStartTime"));
-//        return repository.findAllByOrderByDateAsc();
-        return eventService.getAllEventByDTO();
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
+        if (role.contains("admin")) {
+            return eventService.getAllEventByDTO();
+        } else {
+            return eventService.getAllUserByEmail();
+        }
     }
 
     // Get event-by-bookingId
@@ -80,7 +82,7 @@ public class EventController {
 
     //    filter: specific date
     @GetMapping("/getEventsByEventStartTime/{eventStartTime}")
-    public List<EventDTO> getEventsByEventStartTime(@PathVariable String eventStartTime){
+    public List<EventDTO> getEventsByEventStartTime(@PathVariable String eventStartTime) {
         return eventService.getEventsByEventStartTime(eventStartTime);
     }
 
@@ -88,9 +90,25 @@ public class EventController {
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
     public Event create(@Valid @RequestBody NewEventDTO newEvent) {
-        return eventService.save(newEvent);
-    }
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
+        String newEventEmail = newEvent.getBookingEmail();
 
+        if (newEvent.getBookingEmail().equals(email) || role.contains("admin")) {
+            return eventService.save(newEvent);
+        } else if (email.contains("anonymousUser")) {
+            User findEmail = userRepository.findByEmail(newEventEmail);
+            System.out.println("anonymousUser condition passed");
+            if (findEmail == null) {
+                System.out.println("findEmail condition passed");
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+            }
+            return eventService.save(newEvent);
+        } else {
+            System.out.println("else condition");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+    }
 
     //    update event
     @PutMapping("/{id}")

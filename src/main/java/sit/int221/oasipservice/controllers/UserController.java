@@ -59,7 +59,7 @@ public class UserController {
     @Deprecated
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
-    public User createUser(@Valid @RequestBody User newUser) {
+    public ResponseEntity createUser(@Valid @RequestBody User newUser) {
         return userService.save(newUser);
     }
 
