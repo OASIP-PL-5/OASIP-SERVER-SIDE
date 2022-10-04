@@ -3,11 +3,15 @@ package sit.int221.oasipservice.services;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import sit.int221.oasipservice.dtos.EventDTO;
 import sit.int221.oasipservice.dtos.NewEventDTO;
+import sit.int221.oasipservice.dtos.UserDTO;
 import sit.int221.oasipservice.entities.Event;
+import sit.int221.oasipservice.entities.User;
+import sit.int221.oasipservice.repositories.EventCategoryOwnerRepository;
 import sit.int221.oasipservice.repositories.EventRepository;
 
 import java.util.List;
@@ -24,28 +28,49 @@ public class EventService {
         this.repository = repository;
     }
 
+    private EventCategoryOwnerRepository eventCategoryOwnerRepository;
+
     @Autowired
     private ListMapper listMapper;
 
-// service: get-all-events
+    // service: get-all-events
     public List<EventDTO> getAllEventByDTO() {
         return repository.findAll().stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
-//  service: get-by-bookingId
+    //get all event by email
+    public List<EventDTO> getAllUserByEmail() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return repository.findByEmail(email).stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+
+    //  service: get-by-bookingId
     public List<EventDTO> getSimpleEventById(Integer bookingId) {
         return repository.findById(bookingId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
-//    service: filter-by-eventCategoryId
+    //    service: filter-by-eventCategoryId
     public List<EventDTO> getByEventCategory(Integer eventCategoryId) {
+
+        return repository.getByEventCategory(eventCategoryId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+
+//service: get-by-eventcategory (role:lecturer)
+    public List<EventDTO> getByEventCategoryLecturer(Integer eventCategoryId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
         if (repository.getByEventCategory(eventCategoryId).isEmpty()){
             throw new ResponseStatusException(HttpStatus.NO_CONTENT);
         }
         return repository.getByEventCategory(eventCategoryId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
-//    service: filter-by-upcoming
+//service: สำหรับเรียก event-lists ที่สัมพันธ์กับ lecturer
+    public List<EventDTO> getEventsFromLecturerId(Integer userId){
+        return repository.findEventsFromUserId(userId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+
+
+    //    service: filter-by-upcoming
     public List<EventDTO> getEventsByUpcoming(){
         if (repository.getEventsByUpcoming().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NO_CONTENT);
@@ -53,7 +78,7 @@ public class EventService {
         return repository.getEventsByUpcoming().stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
-//    service: filter-by-past
+    //    service: filter-by-past
     public List<EventDTO> getEventsByPast(){
         if (repository.getEventsByPast().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NO_CONTENT);
@@ -61,7 +86,7 @@ public class EventService {
         return repository.getEventsByPast().stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
-//    service: filter-by-specificDate
+    //    service: filter-by-specificDate
     public List<EventDTO> getEventsByEventStartTime(String eventStartTime){
         if (repository.getEventsByEventStartTime(eventStartTime).isEmpty()){
             throw new ResponseStatusException(HttpStatus.NO_CONTENT);
@@ -69,7 +94,7 @@ public class EventService {
         return repository.getEventsByEventStartTime(eventStartTime).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
-//    serviceMethod: convert-Entity-to-DTO (ใช้งานใน serviceMethod เกี่ยวกับการ GET-EVENTS ทั้งสิ้น )
+    //    serviceMethod: convert-Entity-to-DTO (ใช้งานใน serviceMethod เกี่ยวกับการ GET-EVENTS ทั้งสิ้น )
     private EventDTO convertEntityToDto(Event event) {
         EventDTO eventDTO = new EventDTO();
         eventDTO.setId(event.getId());
@@ -135,8 +160,14 @@ public class EventService {
 //        ) {
 //            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Please Select Start Time.");
 //        }
-
+//        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+//        String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString(); || role.contains("admin")
         Event event = modelMapper.map(newEvent, Event.class);
+//        if(email == null || email == newEvent.getBookingEmail()){
+//            return repository.saveAndFlush(event);
+//        }else{
+//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+//        }
         return repository.saveAndFlush(event);
     }
 
