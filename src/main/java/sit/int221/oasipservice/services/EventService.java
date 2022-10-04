@@ -48,6 +48,13 @@ public class EventService {
 
     //    service: filter-by-eventCategoryId
     public List<EventDTO> getByEventCategory(Integer eventCategoryId) {
+
+        return repository.getByEventCategory(eventCategoryId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+
+//service: get-by-eventcategory (role:lecturer)
+    public List<EventDTO> getByEventCategoryLecturer(Integer eventCategoryId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
         if (repository.getByEventCategory(eventCategoryId).isEmpty()){
             throw new ResponseStatusException(HttpStatus.NO_CONTENT);
         }

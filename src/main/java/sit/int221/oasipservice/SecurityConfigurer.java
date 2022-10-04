@@ -86,6 +86,9 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 //admin สามารถจัดการ category ได้
                 .antMatchers("/api/event-categories/").access("hasAuthority('admin')")
                 .antMatchers(HttpMethod.PUT,"/api/event-categories/{id}").hasAuthority("admin")
+//                lecturer สามารถดู detail event-categories (ที่ตนรับผิดชอบเท่านั้น)
+                .antMatchers(HttpMethod.GET,"/api/event-categories/{id}").hasAuthority("lecturer")
+
 
                 //admin สามารถจัดการ event ได้
 //                .antMatchers("/api/events/").access("hasAuthority('admin')")

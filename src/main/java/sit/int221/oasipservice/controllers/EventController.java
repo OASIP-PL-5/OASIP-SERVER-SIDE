@@ -9,12 +9,17 @@ import sit.int221.oasipservice.dtos.EditEventDTO;
 import sit.int221.oasipservice.dtos.EventDTO;
 import sit.int221.oasipservice.dtos.NewEventDTO;
 import sit.int221.oasipservice.entities.Event;
+import sit.int221.oasipservice.entities.EventCategory;
+import sit.int221.oasipservice.entities.EventCategoryOwner;
 import sit.int221.oasipservice.entities.User;
+import sit.int221.oasipservice.repositories.EventCategoryOwnerRepository;
+import sit.int221.oasipservice.repositories.EventCategoryRepository;
 import sit.int221.oasipservice.repositories.EventRepository;
 import sit.int221.oasipservice.repositories.UserRepository;
 import sit.int221.oasipservice.services.EventService;
 
 import javax.validation.Valid;
+import java.lang.reflect.Array;
 import java.util.List;
 
 @RestController
@@ -22,30 +27,71 @@ import java.util.List;
 public class EventController {
     @Autowired
     private EventService eventService;
-    private final EventRepository repository;
+    private EventRepository repository;
     private UserRepository userRepository;
 
 
-    public EventController(EventRepository repository, UserRepository userRepository) {
+    @Autowired
+    EventCategoryOwnerRepository eventCategoryOwnerRepository;
+
+
+    public EventController(EventRepository repository, UserRepository userRepository, EventCategoryOwnerRepository eventCategoryOwnerRepository) {
         this.repository = repository;
         this.userRepository = userRepository;
+        this.eventCategoryOwnerRepository = eventCategoryOwnerRepository;
     }
 
 
     // Get all-events
+// lecturer ดู events-lists  ของตัวเองเท่านั้น
     @GetMapping("")
     public List<EventDTO> getAllEvent() {
+        //get users'id from email by token
+        String lecEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(lecEmail);
+        //get category by users'id
+        List<EventCategoryOwner> eventCategoryOwner = eventCategoryOwnerRepository.findByUserid(user.getId());
+        //get categoryid from category
+
+
+//        ขั้นตอนนี้จะ
+        int lecId = user.getId();
+        List<EventCategoryOwner> categoryId = eventCategoryOwnerRepository.findByUserid(lecId);
+//        List<EventCategoryOwner> categoryId = eventCategoryOwnerRepository.findByUserid(lecId);
+        //get categoryid from eventcategoryowner
+
+        //get category by using user id
+        // getByEventCategory
+//        List<EventCategoryOwner> catId =categoryId.getEventCategory();
+        // Loop through all category and store in catId
+//        int[] catId2 = new int[categoryId.size()];
+//        for (int i = 0; i < categoryId.size(); i++) {
+//            EventCategory catId = categoryId.get(i).getEventCategory();
+//            //store in catId
+//           catId2[i] = catId.getId(); // Store catId2 in Array of int
+//
+//            }
+        // จัดการกับ catId ให้ return ออกมาเป็น id ทั้งหมด
+        EventCategory catId2 = categoryId.get(1).getEventCategory();
+
+        //get all events by using category id
+        ;
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
         if (role.contains("admin")) {
             return eventService.getAllEventByDTO();
+        } else if (role.contains("lecturer")) {
+            System.out.println("ผ่าน role: lecturer");
+            System.out.println("ได้ cateID : " + categoryId.get(1).getEventCategory().getId());
+            return eventService.getByEventCategory(catId2.getId());
         } else {
             return eventService.getAllUserByEmail();
         }
     }
 
     // Get event-by-bookingId
+//    lecturer ดู detail
     @GetMapping("/{id}")
     public List<EventDTO> getSimpleEventDTO(@PathVariable Integer id) {
         //get email from token

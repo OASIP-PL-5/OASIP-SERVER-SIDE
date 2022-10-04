@@ -32,7 +32,6 @@ public class EventCategoryController {
         return repository.findAll(Sort.by(Sort.Direction.DESC, "id"));
     }
 
-
     @GetMapping("/{id}")
     public SimpleEventCategoriesDTO getSimpleEventCategoriesDto(@PathVariable Integer id) {
         return eventCategoryService.getSimpleEventCategoryById(id);

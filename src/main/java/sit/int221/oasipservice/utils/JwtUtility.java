@@ -77,6 +77,7 @@ public class JwtUtility implements Serializable {
         User getUser = userRepository.findByEmail(subject);
         return Jwts.builder().setSubject(subject)
                 .claim("role",getUser.getRole())
+                .claim("id",getUser.getId())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
                 .signWith(SignatureAlgorithm.HS512, secret).compact();
@@ -99,6 +100,7 @@ public class JwtUtility implements Serializable {
         User getUser = userRepository.findByEmail(subject);
         return Jwts.builder().setSubject(subject)
                 .claim("role",getUser.getRole())
+                .claim("id",getUser.getId())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY_REFRESH * 1000))
                 .signWith(SignatureAlgorithm.HS512, secret).compact();
