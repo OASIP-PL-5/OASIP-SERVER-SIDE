@@ -26,6 +26,16 @@ public interface EventRepository extends JpaRepository<Event, Integer>, JpaSpeci
                             "where u.role = 'lecturer' and eo.userId = :userId", nativeQuery = true)
     List<Event> findEventsFromUserId(@Param("userId") int userId);
 
+    //    logic:: query เพื่อทำการ geteventdetail-bybookingId-lecturerId
+    @Query
+            (
+                    value = "select * from event e join event_category ec on e.eventCategoryId = ec.eventCategoryId\n" +
+                            "join event_category_owner eo on eo.eventCategoryId = ec.eventCategoryId\n" +
+                            "join user u on eo.userId = u.userId\n" +
+                            "where u.role = 'lecturer' and eo.userId = :userId and e.bookingId = :bookingId"
+                    , nativeQuery = true)
+    List<Event> getDetailByUserIdAndBookingId(@Param("userId") int userId, @Param("bookingId") int bookingId);
+
     //จัดการ All Event Date || upcoming
     @Query(value = "select * from event e where (DATE_ADD(e.eventStartTime,interval e.eventDuration minute)) >= now()", nativeQuery = true)
     List<Event> getEventsByUpcoming();

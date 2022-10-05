@@ -48,6 +48,10 @@ public class EventService {
     public List<EventDTO> getSimpleEventById(Integer bookingId) {
         return repository.findById(bookingId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
+//    service: getEventDetails-by-bookingId-and-lecturerId
+    public List<EventDTO> getDetailByLecturerIdAndBookingId(Integer userId, Integer bookingId) {
+        return repository.getDetailByUserIdAndBookingId(userId,bookingId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
 
     //    service: filter-by-eventCategoryId
     public List<EventDTO> getByEventCategory(Integer eventCategoryId) {

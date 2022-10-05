@@ -19,6 +19,7 @@ import sit.int221.oasipservice.repositories.UserRepository;
 import sit.int221.oasipservice.services.EventService;
 
 import javax.validation.Valid;
+import java.lang.module.ResolutionException;
 import java.lang.reflect.Array;
 import java.util.List;
 
@@ -82,16 +83,29 @@ public class EventController {
 
     // Get event-by-bookingId
 //    lecturer ดู detail
-    @GetMapping("/{id}")
-    public List<EventDTO> getSimpleEventDTO(@PathVariable Integer id) {
+    @GetMapping("/{bookingId}")
+    public List<EventDTO> getSimpleEventDTO(@PathVariable Integer bookingId) {
         //get email from token
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         //get role from token
         String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
         User userEmail = userRepository.findByEmail(email);
-        Event storedEventDetails = repository.getById(id);
+        Event storedEventDetails = repository.getById(bookingId);
+
+//        สำหรับกรองข้อมูลของ lecturer
+        String lecEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        User lecUser = userRepository.findByEmail(lecEmail);
+        int lecId = lecUser.getId();
         if (storedEventDetails.getBookingEmail().equals(email) || role.contains("admin")) {
-            return eventService.getSimpleEventById(id);
+            return eventService.getSimpleEventById(bookingId);
+
+        } else if (storedEventDetails.getBookingEmail().equals(email) || role.contains("lecturer")) {
+            System.out.println("ผ่าน role: lecturer");
+            List isEmptyDetail = eventService.getDetailByLecturerIdAndBookingId(lecId,bookingId);
+            if (isEmptyDetail.isEmpty()){
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            }
+            return eventService.getDetailByLecturerIdAndBookingId(lecId, bookingId);
         } else {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
