@@ -101,7 +101,7 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/events").hasAuthority("admin,student")
 
                 //lecturer สามารถ get event ที่ category ของตัวเองได้
-                .antMatchers(HttpMethod.GET,"/api/events/{eventCategoryId}").hasAuthority("admin,lecturer")
+                .antMatchers(HttpMethod.GET,"/api/events/{id}").hasAuthority("admin,lecturer")
 
 
 

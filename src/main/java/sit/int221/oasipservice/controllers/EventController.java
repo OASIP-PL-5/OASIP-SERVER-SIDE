@@ -57,34 +57,16 @@ public class EventController {
 //        ขั้นตอนนี้จะ
         int lecId = user.getId();
         List<EventCategoryOwner> categoryId = eventCategoryOwnerRepository.findByUserid(lecId);
-//        List<EventCategoryOwner> categoryId = eventCategoryOwnerRepository.findByUserid(lecId);
-        //get categoryid from eventcategoryowner
-
-        //get category by using user id
-        // getByEventCategory
-//        List<EventCategoryOwner> catId =categoryId.getEventCategory();
-        // Loop through all category and store in catId
-//        int[] catId2 = new int[categoryId.size()];
-//        for (int i = 0; i < categoryId.size(); i++) {
-//            EventCategory catId = categoryId.get(i).getEventCategory();
-//            //store in catId
-//           catId2[i] = catId.getId(); // Store catId2 in Array of int
 //
-//            }
-        // จัดการกับ catId ให้ return ออกมาเป็น id ทั้งหมด
-        EventCategory catId2 = categoryId.get(1).getEventCategory();
-
-        //get all events by using category id
-        ;
-
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
         if (role.contains("admin")) {
             return eventService.getAllEventByDTO();
         } else if (role.contains("lecturer")) {
+
             System.out.println("ผ่าน role: lecturer");
-            System.out.println("ได้ cateID : " + categoryId.get(1).getEventCategory().getId());
-            return eventService.getByEventCategory(catId2.getId());
+//            System.out.println("ได้ cateID : " + ำ);
+            return eventService.getEventsFromLecturerId(lecId);
         } else {
             return eventService.getAllUserByEmail();
         }
@@ -92,22 +74,35 @@ public class EventController {
 
     // Get event-by-bookingId
 //    lecturer ดู detail
-    @GetMapping("/{id}")
-    public List<EventDTO> getSimpleEventDTO(@PathVariable Integer id) {
+    @GetMapping("/{bookingId}")
+    public List<EventDTO> getSimpleEventDTO(@PathVariable Integer bookingId) {
         //get email from token
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         //get role from token
         String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
         User userEmail = userRepository.findByEmail(email);
-        Event storedEventDetails = repository.getById(id);
+        Event storedEventDetails = repository.getById(bookingId);
+
+//        สำหรับกรองข้อมูลของ lecturer
+        String lecEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        User lecUser = userRepository.findByEmail(lecEmail);
+        int lecId = lecUser.getId();
         if (storedEventDetails.getBookingEmail().equals(email) || role.contains("admin")) {
-            return eventService.getSimpleEventById(id);
+            return eventService.getSimpleEventById(bookingId);
+
+        } else if (storedEventDetails.getBookingEmail().equals(email) || role.contains("lecturer")) {
+            System.out.println("ผ่าน role: lecturer");
+            List isEmptyDetail = eventService.getDetailByLecturerIdAndBookingId(lecId,bookingId);
+            if (isEmptyDetail.isEmpty()){
+                System.out.println(isEmptyDetail);
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"BAD REQUEST");
+            }
+            return eventService.getDetailByLecturerIdAndBookingId(lecId, bookingId);
         } else {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
     }
-
     //  filter-by-eventCategoryId
     @GetMapping("/getByEventCategories/{eventCategoryId}")
     public List<EventDTO> getByEventCategory(@PathVariable Integer eventCategoryId) {
@@ -140,17 +135,19 @@ public class EventController {
         String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
         String newEventEmail = newEvent.getBookingEmail();
 
-        if (newEvent.getBookingEmail().equals(email) || role.contains("admin")) {
+        if (newEvent.getBookingEmail().equals(email) || role.contains("admin") || email.contains("anonymousUser")) {
             return eventService.save(newEvent);
-        } else if (email.contains("anonymousUser")) {
-            User findEmail = userRepository.findByEmail(newEventEmail);
-            System.out.println("anonymousUser condition passed");
-            if (findEmail == null) {
-                System.out.println("findEmail condition passed");
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-            }
-            return eventService.save(newEvent);
-        } else {
+        }
+//        else if (email.contains("anonymousUser")) {
+//            User findEmail = userRepository.findByEmail(newEventEmail);
+//            System.out.println("anonymousUser condition passed");
+//            if (findEmail == null) {
+//                System.out.println("findEmail condition passed");
+//                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+//            }
+//            return eventService.save(newEvent);
+//        }
+        else {
             System.out.println("else condition");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }

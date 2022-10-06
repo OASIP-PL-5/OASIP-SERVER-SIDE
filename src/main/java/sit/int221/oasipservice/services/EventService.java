@@ -43,7 +43,13 @@ public class EventService {
 
     //  service: get-by-bookingId
     public List<EventDTO> getSimpleEventById(Integer bookingId) {
+
         return repository.findById(bookingId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+
+    //    service: getEventDetails-by-bookingId-and-lecturerId
+    public List<EventDTO> getDetailByLecturerIdAndBookingId(Integer userId, Integer bookingId) {
+        return repository.findEventDetailFromUserIdAndBookingId(userId, bookingId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
     //    service: filter-by-eventCategoryId
@@ -52,17 +58,25 @@ public class EventService {
         return repository.getByEventCategory(eventCategoryId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
-//service: get-by-eventcategory (role:lecturer)
+    //service: get-by-eventcategory (role:lecturer)
     public List<EventDTO> getByEventCategoryLecturer(Integer eventCategoryId) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        if (repository.getByEventCategory(eventCategoryId).isEmpty()){
+        if (repository.getByEventCategory(eventCategoryId).isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NO_CONTENT);
         }
         return repository.getByEventCategory(eventCategoryId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
+    //service: สำหรับเรียก event-lists ที่สัมพันธ์กับ lecturer
+    public List<EventDTO> getEventsFromLecturerId(Integer userId) {
+        return repository.findEventsFromUserId(userId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+
+    //service: สำหรับเรียก event-detail ที่สัมพันธ์กับ lecturer
+
+
     //    service: filter-by-upcoming
-    public List<EventDTO> getEventsByUpcoming(){
+    public List<EventDTO> getEventsByUpcoming() {
         if (repository.getEventsByUpcoming().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NO_CONTENT);
         }
@@ -70,7 +84,7 @@ public class EventService {
     }
 
     //    service: filter-by-past
-    public List<EventDTO> getEventsByPast(){
+    public List<EventDTO> getEventsByPast() {
         if (repository.getEventsByPast().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NO_CONTENT);
         }
@@ -78,8 +92,8 @@ public class EventService {
     }
 
     //    service: filter-by-specificDate
-    public List<EventDTO> getEventsByEventStartTime(String eventStartTime){
-        if (repository.getEventsByEventStartTime(eventStartTime).isEmpty()){
+    public List<EventDTO> getEventsByEventStartTime(String eventStartTime) {
+        if (repository.getEventsByEventStartTime(eventStartTime).isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NO_CONTENT);
         }
         return repository.getEventsByEventStartTime(eventStartTime).stream().map(this::convertEntityToDto).collect(Collectors.toList());
