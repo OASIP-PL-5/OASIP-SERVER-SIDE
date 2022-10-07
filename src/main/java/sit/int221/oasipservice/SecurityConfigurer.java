@@ -69,8 +69,10 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 //public endpoints
                 .antMatchers("/api/login").permitAll()
                 .antMatchers(HttpMethod.GET,"/api/event-categories/**").permitAll()
+                .antMatchers(HttpMethod.POST,"/api/email/sendMail").permitAll()
 
-                .antMatchers("/api/events/**").permitAll()
+
+//                .antMatchers("/api/events/**").permitAll()
 //                .antMatchers("/api/match").permitAll()
                 // ใช้ได้เฉพาะมี token ถึงจะเข้า /users ได้
 //                .antMatchers(HttpMethod.GET,"/api/users").permitAll()

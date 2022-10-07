@@ -16,6 +16,7 @@ import sit.int221.oasipservice.repositories.EventCategoryOwnerRepository;
 import sit.int221.oasipservice.repositories.EventCategoryRepository;
 import sit.int221.oasipservice.repositories.EventRepository;
 import sit.int221.oasipservice.repositories.UserRepository;
+import sit.int221.oasipservice.services.EmailService;
 import sit.int221.oasipservice.services.EventService;
 
 import javax.validation.Valid;
@@ -29,6 +30,9 @@ public class EventController {
     private EventService eventService;
     private EventRepository repository;
     private UserRepository userRepository;
+
+    @Autowired
+    private EmailService emailService;
 
 
     @Autowired
@@ -136,6 +140,8 @@ public class EventController {
         String newEventEmail = newEvent.getBookingEmail();
 
         if (newEvent.getBookingEmail().equals(email) || role.contains("admin") || email.contains("anonymousUser")) {
+
+
             return eventService.save(newEvent);
         }
 //        else if (email.contains("anonymousUser")) {

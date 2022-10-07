@@ -2,7 +2,10 @@ package sit.int221.oasipservice.services;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -19,6 +22,14 @@ import java.util.stream.Collectors;
 @Service
 public class EventService {
     private final EventRepository repository;
+
+
+    @Autowired
+    private JavaMailSender javaMailSender;
+
+    @Value("${spring.mail.username}")
+    private String sender;
+
 
     @Autowired
     private ModelMapper modelMapper;
@@ -167,6 +178,22 @@ public class EventService {
 //        }
 //        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 //        String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString(); || role.contains("admin")
+
+
+            // Creating a simple mail message
+            SimpleMailMessage mailMessage
+                    = new SimpleMailMessage();
+
+            // Setting up necessary details
+            mailMessage.setFrom(sender);
+            mailMessage.setTo(newEvent.getBookingEmail());
+            mailMessage.setText("booking_name: " + newEvent.getBookingName() + "\n" + "email: " + newEvent.getBookingEmail() + "\n" + "start time: " + newEvent.getEventStartTime().toLocalDate() + "\n" + "duration: " + newEvent.getEventDuration()+" minutes" + "\n" + "notes: " + newEvent.getEventNotes());
+            mailMessage.setSubject("Event Booking Confirmation");
+
+            // Sending the mail
+            javaMailSender.send(mailMessage);
+
+
         Event event = modelMapper.map(newEvent, Event.class);
 //        if(email == null || email == newEvent.getBookingEmail()){
 //            return repository.saveAndFlush(event);
