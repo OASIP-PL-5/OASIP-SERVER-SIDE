@@ -179,6 +179,13 @@ public class EventService {
 //        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 //        String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString(); || role.contains("admin")
 
+        //if start time is not exactly same with other event in the same category
+        List<Event> eventsList = repository.findAll();
+        for (int i = 0; i < eventsList.size(); i++) {
+            if (newEvent.getEventStartTime().equals(eventsList.get(i).getEventStartTime())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "StartTime cannot be the same.");
+            }
+        }
 
             // Creating a simple mail message
             SimpleMailMessage mailMessage

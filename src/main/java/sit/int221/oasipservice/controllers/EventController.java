@@ -139,9 +139,11 @@ public class EventController {
         String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
         String newEventEmail = newEvent.getBookingEmail();
 
-        if (newEvent.getBookingEmail().equals(email) || role.contains("admin") || email.contains("anonymousUser")) {
-
-
+        if (newEvent.getBookingEmail().equals(email)
+                || role.contains("admin")
+                || email.contains("anonymousUser")
+                || role.contains("student")) {
+            System.out.println("role: "+ role);
             return eventService.save(newEvent);
         }
 //        else if (email.contains("anonymousUser")) {
@@ -155,6 +157,7 @@ public class EventController {
 //        }
         else {
             System.out.println("else condition");
+            System.out.println("role: "+ role);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
     }

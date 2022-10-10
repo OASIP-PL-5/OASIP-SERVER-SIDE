@@ -79,7 +79,7 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.POST,"/api/users").permitAll()
                 .antMatchers(HttpMethod.GET,"/api/events/{id}").permitAll()
                 .antMatchers("/api/refresh").permitAll()
-
+                .antMatchers(HttpMethod.POST,"/api/events").permitAll()
 
 
 
@@ -100,7 +100,7 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.POST,"/api/match").hasAuthority("admin")
 
                 //student สามารถ get put delete event ของตัวเองได้
-                .antMatchers("/api/events").hasAuthority("admin,student")
+                .antMatchers("/api/events/").hasAuthority("admin,student")
 
                 //lecturer สามารถ get event ที่ category ของตัวเองได้
                 .antMatchers(HttpMethod.GET,"/api/events/{id}").hasAuthority("admin,lecturer")
