@@ -69,6 +69,12 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 //public endpoints
                 .antMatchers("/api/login").permitAll()
                 .antMatchers(HttpMethod.GET,"/api/event-categories/**").permitAll()
+
+                //filter menu
+//                .antMatchers(HttpMethod.GET,"/api/events/getByEventCategories/{eventCategoryId}").permitAll()
+//                .antMatchers(HttpMethod.GET,"/api/events/getEventByUpcoming").permitAll()
+//                .antMatchers(HttpMethod.GET,"/api/events/getEventByPast").permitAll()
+//                .antMatchers(HttpMethod.GET,"/api/events/getEventsByEventStartTime/{eventStartTime}").permitAll()
                 .antMatchers(HttpMethod.POST,"/api/email/sendMail").permitAll()
 
 
@@ -78,7 +84,6 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
 //                .antMatchers(HttpMethod.GET,"/api/users").permitAll()
                 .antMatchers(HttpMethod.POST,"/api/users").permitAll()
                 .antMatchers(HttpMethod.GET,"/api/events/{id}").permitAll()
-                .antMatchers("/api/refresh").permitAll()
                 .antMatchers(HttpMethod.POST,"/api/events").permitAll()
 
 
@@ -90,7 +95,7 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.PUT,"/api/event-categories/{id}").hasAuthority("admin")
 //                lecturer สามารถดู detail event-categories (ที่ตนรับผิดชอบเท่านั้น)
                 .antMatchers(HttpMethod.GET,"/api/event-categories/{id}").hasAuthority("lecturer")
-
+                .antMatchers(HttpMethod.POST,"/api/refresh").hasAnyAuthority("admin","lecturer","student")
 
                 //admin สามารถจัดการ event ได้
 //                .antMatchers("/api/events/").access("hasAuthority('admin')")

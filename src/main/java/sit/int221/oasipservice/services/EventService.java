@@ -15,6 +15,7 @@ import sit.int221.oasipservice.dtos.UserDTO;
 import sit.int221.oasipservice.entities.Event;
 import sit.int221.oasipservice.entities.User;
 import sit.int221.oasipservice.repositories.EventRepository;
+import sit.int221.oasipservice.repositories.UserRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
 @Service
 public class EventService {
     private final EventRepository repository;
-
+    private final UserRepository userRepository;
 
     @Autowired
     private JavaMailSender javaMailSender;
@@ -34,8 +35,9 @@ public class EventService {
     @Autowired
     private ModelMapper modelMapper;
 
-    public EventService(EventRepository repository) {
+    public EventService(EventRepository repository, UserRepository userRepository) {
         this.repository = repository;
+        this.userRepository=userRepository;
     }
 
     @Autowired
@@ -63,11 +65,23 @@ public class EventService {
         return repository.findEventDetailFromUserIdAndBookingId(userId, bookingId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
+
     //    service: filter-by-eventCategoryId
     public List<EventDTO> getByEventCategory(Integer eventCategoryId) {
-
         return repository.getByEventCategory(eventCategoryId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
+    //   service: filter-by-eventCategoryIdByEmail
+    public List<EventDTO> getByEventCategoryByEmail(Integer eventCategoryId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+            return repository.getByEventCategoryAndEmail(eventCategoryId, email).stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+    //    service: filter-by-eventCategoryIdBylecturerOwner
+    public List<EventDTO> getByEventCategoryByLecturerOwner(Integer eventCategoryId, Integer userId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return repository.getByEventCategoryByCategoryOwner(eventCategoryId, userId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+
+
 
     //service: get-by-eventcategory (role:lecturer)
     public List<EventDTO> getByEventCategoryLecturer(Integer eventCategoryId) {
@@ -77,6 +91,7 @@ public class EventService {
         }
         return repository.getByEventCategory(eventCategoryId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
+
 
     //service: สำหรับเรียก event-lists ที่สัมพันธ์กับ lecturer
     public List<EventDTO> getEventsFromLecturerId(Integer userId) {
@@ -187,18 +202,18 @@ public class EventService {
             }
         }
 
-            // Creating a simple mail message
-            SimpleMailMessage mailMessage
-                    = new SimpleMailMessage();
+        // Creating a simple mail message
+        SimpleMailMessage mailMessage
+                = new SimpleMailMessage();
 
-            // Setting up necessary details
-            mailMessage.setFrom(sender);
-            mailMessage.setTo(newEvent.getBookingEmail());
-            mailMessage.setText("booking_name: " + newEvent.getBookingName() + "\n" + "email: " + newEvent.getBookingEmail() + "\n" + "start time: " + newEvent.getEventStartTime().toLocalDate() + "\n" + "duration: " + newEvent.getEventDuration()+" minutes" + "\n" + "notes: " + newEvent.getEventNotes());
-            mailMessage.setSubject("Event Booking Confirmation");
+        // Setting up necessary details
+        mailMessage.setFrom(sender);
+        mailMessage.setTo(newEvent.getBookingEmail());
+        mailMessage.setText("booking_name: " + newEvent.getBookingName() + "\n" + "email: " + newEvent.getBookingEmail() + "\n" + "start time: " + newEvent.getEventStartTime().toLocalDate() + "\n" + "duration: " + newEvent.getEventDuration() + " minutes" + "\n" + "notes: " + newEvent.getEventNotes());
+        mailMessage.setSubject("Event Booking Confirmation");
 
-            // Sending the mail
-            javaMailSender.send(mailMessage);
+        // Sending the mail
+        javaMailSender.send(mailMessage);
 
 
         Event event = modelMapper.map(newEvent, Event.class);

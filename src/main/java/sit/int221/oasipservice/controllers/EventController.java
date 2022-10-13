@@ -64,15 +64,17 @@ public class EventController {
 //
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
-        if (role.contains("admin")) {
-            return eventService.getAllEventByDTO();
+//        if (role.contains("admin")) {
+        if (role.contains("student")) {
+//            return eventService.getAllEventByDTO();
+            return eventService.getAllUserByEmail();
         } else if (role.contains("lecturer")) {
-
             System.out.println("ผ่าน role: lecturer");
 //            System.out.println("ได้ cateID : " + ำ);
             return eventService.getEventsFromLecturerId(lecId);
         } else {
-            return eventService.getAllUserByEmail();
+//            return eventService.getAllUserByEmail();
+            return eventService.getAllEventByDTO();
         }
     }
 
@@ -96,10 +98,10 @@ public class EventController {
 
         } else if (storedEventDetails.getBookingEmail().equals(email) || role.contains("lecturer")) {
             System.out.println("ผ่าน role: lecturer");
-            List isEmptyDetail = eventService.getDetailByLecturerIdAndBookingId(lecId,bookingId);
-            if (isEmptyDetail.isEmpty()){
+            List isEmptyDetail = eventService.getDetailByLecturerIdAndBookingId(lecId, bookingId);
+            if (isEmptyDetail.isEmpty()) {
                 System.out.println(isEmptyDetail);
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"BAD REQUEST");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "BAD REQUEST");
             }
             return eventService.getDetailByLecturerIdAndBookingId(lecId, bookingId);
         } else {
@@ -107,11 +109,58 @@ public class EventController {
         }
 
     }
-    //  filter-by-eventCategoryId
+
+    //filter-by-eventCategoryId
+
     @GetMapping("/getByEventCategories/{eventCategoryId}")
     public List<EventDTO> getByEventCategory(@PathVariable Integer eventCategoryId) {
-        return eventService.getByEventCategory(eventCategoryId);
+        //find user id from email
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email);
+        Integer userId = user.getId();
+        //getrole
+        String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
+        if(role.contains("student")){
+            System.out.println(userId);
+            return eventService.getByEventCategoryByEmail(eventCategoryId);
+        }else if (role.contains("lecturer")){
+            System.out.println(userId);
+            return eventService.getByEventCategoryByLecturerOwner(eventCategoryId,userId);
+        }else{
+            System.out.println(userId);
+            return eventService.getByEventCategory(eventCategoryId);
+        }
     }
+    //this approach is put too much logic in controller
+//        //get role from token
+//        String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
+//        if (role.contains("student")) {
+//            return eventService.getByEventCategoryByEmail(eventCategoryId);
+//        } else if (role.contains("admin")) {
+//            return eventService.getByEventCategory(eventCategoryId);
+//        } else if (role.contains("lecturer")) {
+//            //if lecturer is owner of eventCategory will return all event in eventCategory
+//            //get lecId from email
+//            String lecEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+//            User lecUser = userRepository.findByEmail(lecEmail);
+//            int lecId = lecUser.getId();
+//            List<EventCategoryOwner> categoryId = eventCategoryOwnerRepository.findByUserid(lecId);
+//            System.out.println(categoryId);
+//            if (eventCategoryId.equals(categoryId)) {
+//                System.out.println(categoryId);
+//                System.out.println(lecId);
+//                return eventService.getByEventCategory(eventCategoryId);
+//            }
+//            else {
+//                System.out.println("catID"+categoryId);
+//                System.out.println("lecId"+lecId);
+//                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+//            }
+//            //get category id from eventCategoryOwner
+//        } else {
+//            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+//        }
+//    }
 
     //filter-by-Upcoming
     @GetMapping("/getEventByUpcoming")
@@ -120,13 +169,13 @@ public class EventController {
     }
 
     //filter-by-Past
-    @GetMapping("/getEventByPast")
+//    @GetMapping("/getEventByPast")
     public List<EventDTO> getEventsByPast() {
         return eventService.getEventsByPast();
     }
 
     //    filter: specific date
-    @GetMapping("/getEventsByEventStartTime/{eventStartTime}")
+//    @GetMapping("/getEventsByEventStartTime/{eventStartTime}")
     public List<EventDTO> getEventsByEventStartTime(@PathVariable String eventStartTime) {
         return eventService.getEventsByEventStartTime(eventStartTime);
     }
@@ -143,7 +192,7 @@ public class EventController {
                 || role.contains("admin")
                 || email.contains("anonymousUser")
                 || role.contains("student")) {
-            System.out.println("role: "+ role);
+            System.out.println("role: " + role);
             return eventService.save(newEvent);
         }
 //        else if (email.contains("anonymousUser")) {
@@ -157,7 +206,7 @@ public class EventController {
 //        }
         else {
             System.out.println("else condition");
-            System.out.println("role: "+ role);
+            System.out.println("role: " + role);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
     }

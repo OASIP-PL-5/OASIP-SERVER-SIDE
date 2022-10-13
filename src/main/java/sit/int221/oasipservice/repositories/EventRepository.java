@@ -5,15 +5,32 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import sit.int221.oasipservice.entities.Event;
+import sit.int221.oasipservice.entities.User;
 
 import java.util.List;
 
 public interface EventRepository extends JpaRepository<Event, Integer>, JpaSpecificationExecutor<Event> {
 
+    //filter:getByEventCategory
     @Query(
             value = "SELECT * FROM event e where e.eventCategoryId= :c ORDER BY eventStartTime DESC ", nativeQuery = true
     )
     List<Event> getByEventCategory(@Param("c") Integer eventCategoryId);
+    @Query(
+            value = "SELECT * FROM event e where e.eventCategoryId= :c and e.bookingEmail= :email ORDER BY eventStartTime DESC ", nativeQuery = true
+    )
+    List<Event> getByEventCategoryAndEmail(@Param("c") Integer eventCategoryId, @Param("email") String email);
+    @Query(
+            value = "select e.* from event e join event_category_owner eco on e.eventCategoryId = eco.eventCategoryId\n" +
+                    "join user u on eco.userId = u.userId \n" +
+                    "where e.eventCategoryId = :c and u.userId = :userId", nativeQuery = true
+    )
+    List<Event> getByEventCategoryByCategoryOwner(@Param("c") Integer eventCategoryId,@Param("userId") Integer userId);
+
+    @Query(
+            value = "SELECT eventCategoryId FROM event_category_owner" , nativeQuery = true
+    )
+    List<Event> getByEventCategoryOwner();
 
     //    นำ query นี้ เพื่อให้ userid ลง param จะได้ eventLists ทั้งหมดที่สัมพันธ์กับ userId:lecturer นี้
     @Query

@@ -83,6 +83,7 @@ public class JwtUtility implements Serializable {
                 .signWith(SignatureAlgorithm.HS512, secret).compact();
     }
 
+
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = getUsernameFromToken(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));

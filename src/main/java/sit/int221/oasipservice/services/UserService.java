@@ -61,12 +61,20 @@ public class UserService implements UserDetailsService {
         newUser.setPassword(hash);
         List<User> userList = repository.findAll();
         for (int i = 0; i < userList.size(); i++) {
+            if (newUser.getName().equals(userList.get(i).getName())) {
+//                throw new ResponseStatusException(HttpStatus.CONFLICT);
+//                throw new RuntimeException("Email already exists");
+                return new ResponseEntity("This user name already exists", HttpStatus.EXPECTATION_FAILED);
+            }
+        }
+        for (int i = 0; i < userList.size(); i++) {
             if (newUser.getEmail().equals(userList.get(i).getEmail())) {
 //                throw new ResponseStatusException(HttpStatus.CONFLICT);
 //                throw new RuntimeException("Email already exists");
                 return new ResponseEntity("Email already exists", HttpStatus.BAD_REQUEST);
             }
         }
+
         repository.save(newUser);
         return new ResponseEntity("Create user successfully", HttpStatus.CREATED);
     }
