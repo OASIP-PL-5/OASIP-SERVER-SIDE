@@ -162,22 +162,64 @@ public class EventController {
 //        }
 //    }
 
-    //filter-by-Upcoming
+    //filter-by-date :: filter-by-Upcoming
     @GetMapping("/getEventByUpcoming")
     public List<EventDTO> getEventsByUpcoming() {
-        return eventService.getEventsByUpcoming();
+        //find user id from email
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email);
+        Integer userId = user.getId();
+        //getrole
+        String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
+        if(role.contains("student")){
+            return eventService.getEventsByUpcomingByEmail();
+        }
+        else if (role.contains("lecturer")){
+            return eventService.getEventsByUpcomingByCategoryOwner(userId);
+        }
+        else{
+            return eventService.getEventsByUpcoming();
+        }
     }
 
-    //filter-by-Past
-//    @GetMapping("/getEventByPast")
+    //filter-by-date :: filter-by-Past
+    @GetMapping("/getEventByPast")
     public List<EventDTO> getEventsByPast() {
-        return eventService.getEventsByPast();
+        //find user id from email
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email);
+        Integer userId = user.getId();
+        //getrole
+        String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
+        if(role.contains("student")){
+            return eventService.getEventsByPastByEmail();
+        }
+        else if (role.contains("lecturer")){
+            return eventService.getEventsByPastByCategoryOwner(userId);
+        }
+        else{
+            return eventService.getEventsByPast();
+        }
     }
 
     //    filter: specific date
-//    @GetMapping("/getEventsByEventStartTime/{eventStartTime}")
+    @GetMapping("/getEventsByEventStartTime/{eventStartTime}")
     public List<EventDTO> getEventsByEventStartTime(@PathVariable String eventStartTime) {
-        return eventService.getEventsByEventStartTime(eventStartTime);
+        //find user id from email
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email);
+        Integer userId = user.getId();
+        //getrole
+        String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
+        if(role.contains("student")){
+            return  eventService.getEventsByEventStartTimeByEmail(eventStartTime);
+        }
+        else if (role.contains("lecturer")){
+            return eventService.getEventsByEventStartTimeByCategoryOwner(eventStartTime,userId);
+        }
+        else{
+            return eventService.getEventsByEventStartTime(eventStartTime);
+        }
     }
 
     //    create new event
@@ -188,11 +230,40 @@ public class EventController {
         String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
         String newEventEmail = newEvent.getBookingEmail();
 
-        if (newEvent.getBookingEmail().equals(email)
-                || role.contains("admin")
-                || email.contains("anonymousUser")
-                || role.contains("student")) {
+//        if (newEvent.getBookingEmail().equals(email)
+//                || role.contains("admin")
+//                || email.contains("anonymousUser")
+//                || role.contains("student")) {
+//            System.out.println("role: " + role);
+//            return eventService.save(newEvent);
+//        }
+////        else if (email.contains("anonymousUser")) {
+////            User findEmail = userRepository.findByEmail(newEventEmail);
+////            System.out.println("anonymousUser condition passed");
+////            if (findEmail == null) {
+////                System.out.println("findEmail condition passed");
+////                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+////            }
+////            return eventService.save(newEvent);
+////        }
+//        else {
+//            System.out.println("else condition");
+//            System.out.println("role: " + role);
+//            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+//        }
+//    }
+        System.out.println("before condition post [email] : "+email);
+        System.out.println("before condition post [role] : "+role);
+        if (role.contains("lecturer")) {
             System.out.println("role: " + role);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+        if (role.contains("admin")
+                || role.contains("[ROLE_ANONYMOUS]")
+                || role.contains("student")) {
+            System.out.println("email : "+email);
+            System.out.println("role: " + role);
+            System.out.println("post event success !!!");
             return eventService.save(newEvent);
         }
 //        else if (email.contains("anonymousUser")) {
@@ -206,10 +277,12 @@ public class EventController {
 //        }
         else {
             System.out.println("else condition");
+            System.out.println("email : "+email);
             System.out.println("role: " + role);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
     }
+
 
     //    update event
     @PutMapping("/{id}")

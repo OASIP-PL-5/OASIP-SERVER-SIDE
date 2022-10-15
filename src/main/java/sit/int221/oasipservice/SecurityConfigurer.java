@@ -71,12 +71,13 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.GET,"/api/event-categories/**").permitAll()
 
                 //filter menu
-//                .antMatchers(HttpMethod.GET,"/api/events/getByEventCategories/{eventCategoryId}").permitAll()
-//                .antMatchers(HttpMethod.GET,"/api/events/getEventByUpcoming").permitAll()
-//                .antMatchers(HttpMethod.GET,"/api/events/getEventByPast").permitAll()
-//                .antMatchers(HttpMethod.GET,"/api/events/getEventsByEventStartTime/{eventStartTime}").permitAll()
-                .antMatchers(HttpMethod.POST,"/api/email/sendMail").permitAll()
+                .antMatchers(HttpMethod.GET,"/api/events/getByEventCategories/{eventCategoryId}").hasAnyAuthority("admin","lecturer","student")
+                .antMatchers(HttpMethod.GET,"/api/events/getEventByUpcoming").hasAnyAuthority("admin","lecturer","student")
+                .antMatchers(HttpMethod.GET,"/api/events/getEventByPast").hasAnyAuthority("admin","lecturer","student")
+                .antMatchers(HttpMethod.GET,"/api/events/getEventsByEventStartTime/{eventStartTime}").hasAnyAuthority("admin","lecturer","student")
 
+                //send email
+                .antMatchers(HttpMethod.POST,"/api/email/sendMail").permitAll()
 
 //                .antMatchers("/api/events/**").permitAll()
 //                .antMatchers("/api/match").permitAll()
@@ -105,12 +106,10 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.POST,"/api/match").hasAuthority("admin")
 
                 //student สามารถ get put delete event ของตัวเองได้
-                .antMatchers("/api/events/").hasAuthority("admin,student")
+                .antMatchers("/api/events/").hasAnyAuthority("admin","student")
 
                 //lecturer สามารถ get event ที่ category ของตัวเองได้
-                .antMatchers(HttpMethod.GET,"/api/events/{id}").hasAuthority("admin,lecturer")
-
-
+                .antMatchers(HttpMethod.GET,"/api/events/{id}").hasAnyAuthority("admin","lecturer")
 
                 .anyRequest().authenticated()
                 .and()
