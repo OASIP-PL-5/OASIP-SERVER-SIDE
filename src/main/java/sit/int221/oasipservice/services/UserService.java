@@ -55,26 +55,25 @@ public class UserService implements UserDetailsService {
     // service for add-user
     @Deprecated
     public ResponseEntity save(User newUser) {
-        Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id, 16, 16);
-        String hash = argon2.hash(2, 16, 1, newUser.getPassword());
-//        hash(int iterations, int memory, int parallelism, char[] password)
-        newUser.setPassword(hash);
         List<User> userList = repository.findAll();
         for (int i = 0; i < userList.size(); i++) {
             if (newUser.getName().equals(userList.get(i).getName())) {
 //                throw new ResponseStatusException(HttpStatus.CONFLICT);
 //                throw new RuntimeException("Email already exists");
                 return new ResponseEntity("This user name already exists", HttpStatus.EXPECTATION_FAILED);
-            }
-        }
-        for (int i = 0; i < userList.size(); i++) {
-            if (newUser.getEmail().equals(userList.get(i).getEmail())) {
+            } else if (newUser.getEmail().equals(userList.get(i).getEmail())) {
 //                throw new ResponseStatusException(HttpStatus.CONFLICT);
 //                throw new RuntimeException("Email already exists");
                 return new ResponseEntity("Email already exists", HttpStatus.BAD_REQUEST);
+            } else if (newUser.getPassword().length() < 8 || newUser.getPassword().length() > 14) {
+                System.out.println("invalid number of password : " + newUser.getPassword().length());
+                return new ResponseEntity("The password must be between 8 and 14 characters long", HttpStatus.BAD_REQUEST);
             }
         }
-
+        System.out.println("valid number of password (8-14): " + newUser.getPassword() + " --> (" + newUser.getPassword().length() + ")");
+        Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id, 16, 16);
+        String hash = argon2.hash(2, 16, 1, newUser.getPassword());
+        newUser.setPassword(hash); //        hash(int iterations, int memory, int parallelism, char[] password)
         repository.save(newUser);
         return new ResponseEntity("Create user successfully", HttpStatus.CREATED);
     }
