@@ -1,4 +1,4 @@
-package sit.int221.oasipservice.exceptions;//package sit.int221.oasipservice.exceptions;
+//package sit.int221.oasipservice.exceptions;
 //
 //import com.fasterxml.jackson.databind.ObjectMapper;
 //import org.springframework.http.HttpStatus;
