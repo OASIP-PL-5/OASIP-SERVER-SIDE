@@ -3,6 +3,7 @@ package sit.int221.oasipservice.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import sit.int221.oasipservice.dtos.EditEventCateDTO;
 import sit.int221.oasipservice.dtos.SimpleEventCategoriesDTO;
@@ -31,7 +32,6 @@ public class EventCategoryController {
         return repository.findAll(Sort.by(Sort.Direction.DESC, "id"));
     }
 
-
     @GetMapping("/{id}")
     public SimpleEventCategoriesDTO getSimpleEventCategoriesDto(@PathVariable Integer id) {
         return eventCategoryService.getSimpleEventCategoryById(id);
@@ -44,6 +44,7 @@ public class EventCategoryController {
         return repository.saveAndFlush(newEventCategory);
     }
 
+    @PreAuthorize("hasAuthority('admin')")
     @PutMapping("/{id}")
     public EventCategory updateEventCategory(@Valid @RequestBody EditEventCateDTO updateEventCategory,
                                              @PathVariable Integer id) {
@@ -54,6 +55,8 @@ public class EventCategoryController {
 
             return repository.saveAndFlush(storedEventCategoryDetails);
     }
+
+
 
 }
 

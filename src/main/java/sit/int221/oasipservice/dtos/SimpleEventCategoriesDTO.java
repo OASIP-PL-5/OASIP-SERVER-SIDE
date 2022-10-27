@@ -11,4 +11,5 @@ public class SimpleEventCategoriesDTO {
     private String eventCategoryName;
     private String eventCategoryDescription;
     private Integer eventDuration;
+    private String catImg;
 }

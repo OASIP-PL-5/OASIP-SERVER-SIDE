@@ -1,8 +1,10 @@
 package sit.int221.oasipservice.exceptions;
 
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -14,21 +16,34 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import sit.int221.oasipservice.entities.User;
 import sit.int221.oasipservice.exceptions.ApiError;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
+import javax.validation.constraints.Pattern;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 @ControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+
+    // handle specific exceptions
+//    @ExceptionHandler(ResourceNotFoundException.class)
+//    public ResponseEntity<?> handleResourceBadRequestException
+//    (ResourceNotFoundException exception, WebRequest request){
+//        ErrorDetails errorDetails = new ErrorDetails(new Date(), exception.getMessage(), request.getDescription(false));
+//        return new ResponseEntity(errorDetails, HttpStatus.BAD_REQUEST);
+//
+//    }
+
+    @ExceptionHandler
+    public ResponseEntity<Object> HttpMessageNotReadableException(UserRoleException e) {
+        return new ResponseEntity<>("stop gay plaese!!!", HttpStatus.BAD_REQUEST);
+    }
 
 //    @Override
 //    protected ResponseEntity<Object> handleExceptionInternal (Exception ex,Object body, HttpHeaders headers, HttpStatus status, WebRequest request){
@@ -64,6 +79,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 //                apiError, new HttpHeaders(), apiError.getStatus());
 //    }
 
+    // exception เทอมที่แล้ว
     @ExceptionHandler({ConstraintViolationException.class})
     public ResponseEntity<Object> handleConstraintViolation(ConstraintViolationException ex, WebRequest request) {
 
@@ -74,14 +90,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         }
 
 
-        ApiError apiError = new ApiError(LocalDateTime.now(),HttpStatus.BAD_REQUEST,ex.getLocalizedMessage(),errors);
+        ApiError apiError = new ApiError(LocalDateTime.now(), HttpStatus.BAD_REQUEST, ex.getLocalizedMessage(), errors);
         return new ResponseEntity<Object>(apiError, new HttpHeaders(), apiError.getStatus());
 
 //        ApiError apiError500 = new ApiError(HttpStatus.INTERNAL_SERVER_ERROR,ex.getLocalizedMessage(),errors);
 //        return new ResponseEntity<Object>(apiError500, new HttpHeaders(), apiError500.getStatus());
     }
 
-
+//    @Override
+//    protected ResponseEntity<Object> handleHttpMessageNotReadable(
+//            HttpMessageNotReadableException ex, HttpHeaders headers,
+//            HttpStatus status, WebRequest request) {
+//        // paste custom hadling here
 
 
 //    @ExceptionHandler({ MethodArgumentTypeMismatchException.class })
@@ -95,5 +115,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 //        return new ResponseEntity<Object>(
 //                apiError, new HttpHeaders(), apiError.getStatus());
 //    }
+
+
 
 }
