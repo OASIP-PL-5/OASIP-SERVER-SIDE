@@ -4,6 +4,7 @@ package sit.int221.oasipservice.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -48,17 +49,26 @@ public class UserController {
         System.out.println("check role before condition" + role);
         if (role.contains("admin")) {
             return userService.getAllUserByDTO();
-        } else {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You are not authorized to access this page");
+        } else if (role.contains("student") || role.contains("lecturer")) {
+            System.out.println("are you student or lecturer ? : " + role);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to access this page");
         }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to access this page");
     }
 
 
     //    Get user-by-id
     @GetMapping("/{id}")
     public List<UserDTO> getSimpleUserDTO(@PathVariable Integer id) {
-
-        return userService.getUserById(id);
+        String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
+        System.out.println("check role before condition" + role);
+        if (role.contains("admin")) {
+            return userService.getUserById(id);
+        } else if (role.contains("student") || role.contains("lecturer")) {
+            System.out.println("are you student or lecturer ? : " + role);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to access this page");
+        }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to access this page");
     }
 
     //    add new user
@@ -66,6 +76,7 @@ public class UserController {
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity createUser(@Valid @RequestBody User newUser) {
+
         return userService.save(newUser);
     }
 
@@ -84,9 +95,15 @@ public class UserController {
     //delete-user
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable Integer id) {
-        repository.findById(id).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, id + " does not exist !"));
-        repository.deleteById(id);
+        String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
+        System.out.println("check role before condition" + role);
+        if (role.contains("admin")) {
+            repository.findById(id).orElseThrow(() ->
+                    new ResponseStatusException(HttpStatus.NOT_FOUND, id + " does not exist !"));
+            repository.deleteById(id);
+        } else {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to access this page");
+        }
     }
 
 //    check-login user

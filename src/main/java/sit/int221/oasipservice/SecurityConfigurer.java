@@ -80,10 +80,12 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.POST,"/api/email/sendMail").permitAll()
 
 //                .antMatchers("/api/events/**").permitAll()
-//                .antMatchers("/api/match").permitAll()
+                .antMatchers("/api/match").hasAuthority("admin")
                 // ใช้ได้เฉพาะมี token ถึงจะเข้า /users ได้
 //                .antMatchers(HttpMethod.GET,"/api/users").permitAll()
                 .antMatchers(HttpMethod.POST,"/api/users").hasAuthority("admin")
+                .antMatchers(HttpMethod.POST,"/api/users/**").hasAuthority("admin")
+                .antMatchers("/api/users").hasAuthority("admin")
                 .antMatchers(HttpMethod.GET,"/api/events/{id}").permitAll()
                 .antMatchers(HttpMethod.POST,"/api/events").permitAll()
 
@@ -102,7 +104,8 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
 //                .antMatchers("/api/events/").access("hasAuthority('admin')")
 
                 //admin สามารถ get user และ match passowrd ได้
-                .antMatchers(HttpMethod.GET,"/api/users").hasAnyAuthority("admin","lecturer","student")
+//                .antMatchers(HttpMethod.GET,"/api/users").hasAnyAuthority("admin","lecturer","student")
+                .antMatchers(HttpMethod.GET,"/api/users").hasAnyAuthority("admin","student","lecturer")
                 .antMatchers(HttpMethod.POST,"/api/match").hasAuthority("admin")
 
                 //student สามารถ get put delete event ของตัวเองได้
