@@ -60,7 +60,7 @@ public class UserService implements UserDetailsService {
             if (newUser.getName().equals(userList.get(i).getName())) {
 //                throw new ResponseStatusException(HttpStatus.CONFLICT);
 //                throw new RuntimeException("Email already exists");
-                return new ResponseEntity("This user name already exists", HttpStatus.EXPECTATION_FAILED);
+                return new ResponseEntity("This user name already exists", HttpStatus.CONFLICT);
             } else if (newUser.getEmail().equals(userList.get(i).getEmail())) {
 //                throw new ResponseStatusException(HttpStatus.CONFLICT);
 //                throw new RuntimeException("Email already exists");
