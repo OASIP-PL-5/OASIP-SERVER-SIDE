@@ -2,7 +2,11 @@ package sit.int221.oasipservice.services;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -11,8 +15,8 @@ import sit.int221.oasipservice.dtos.NewEventDTO;
 import sit.int221.oasipservice.dtos.UserDTO;
 import sit.int221.oasipservice.entities.Event;
 import sit.int221.oasipservice.entities.User;
-import sit.int221.oasipservice.repositories.EventCategoryOwnerRepository;
 import sit.int221.oasipservice.repositories.EventRepository;
+import sit.int221.oasipservice.repositories.UserRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,22 +24,29 @@ import java.util.stream.Collectors;
 @Service
 public class EventService {
     private final EventRepository repository;
+    private final UserRepository userRepository;
+
+    @Autowired
+    private JavaMailSender javaMailSender;
+
+    @Value("${spring.mail.username}")
+    private String sender;
+
 
     @Autowired
     private ModelMapper modelMapper;
 
-    public EventService(EventRepository repository) {
+    public EventService(EventRepository repository, UserRepository userRepository) {
         this.repository = repository;
+        this.userRepository = userRepository;
     }
-
-    private EventCategoryOwnerRepository eventCategoryOwnerRepository;
 
     @Autowired
     private ListMapper listMapper;
 
     // service: get-all-events
     public List<EventDTO> getAllEventByDTO() {
-        return repository.findAll().stream().map(this::convertEntityToDto).collect(Collectors.toList());
+        return repository.findAll(Sort.by(Sort.Direction.DESC, "eventStartTime")).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
     //get all event by email
@@ -46,57 +57,123 @@ public class EventService {
 
     //  service: get-by-bookingId
     public List<EventDTO> getSimpleEventById(Integer bookingId) {
+
         return repository.findById(bookingId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
-//    service: getEventDetails-by-bookingId-and-lecturerId
+
+    //    service: getEventDetails-by-bookingId-and-lecturerId
     public List<EventDTO> getDetailByLecturerIdAndBookingId(Integer userId, Integer bookingId) {
-        return repository.getDetailByUserIdAndBookingId(userId,bookingId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
+        return repository.findEventDetailFromUserIdAndBookingId(userId, bookingId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
+
 
     //    service: filter-by-eventCategoryId
     public List<EventDTO> getByEventCategory(Integer eventCategoryId) {
-
         return repository.getByEventCategory(eventCategoryId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
-//service: get-by-eventcategory (role:lecturer)
+    //   service: filter-by-eventCategoryIdByEmail
+    public List<EventDTO> getByEventCategoryByEmail(Integer eventCategoryId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return repository.getByEventCategoryAndEmail(eventCategoryId, email).stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+
+    //    service: filter-by-eventCategoryIdBylecturerOwner
+    public List<EventDTO> getByEventCategoryByLecturerOwner(Integer eventCategoryId, Integer userId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return repository.getByEventCategoryByCategoryOwner(eventCategoryId, userId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+
+
+    //service: get-by-eventcategory (role:lecturer)
     public List<EventDTO> getByEventCategoryLecturer(Integer eventCategoryId) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        if (repository.getByEventCategory(eventCategoryId).isEmpty()){
+        if (repository.getByEventCategory(eventCategoryId).isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NO_CONTENT);
         }
         return repository.getByEventCategory(eventCategoryId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
-//service: สำหรับเรียก event-lists ที่สัมพันธ์กับ lecturer
-    public List<EventDTO> getEventsFromLecturerId(Integer userId){
+
+    //service: สำหรับเรียก event-lists ที่สัมพันธ์กับ lecturer
+    public List<EventDTO> getEventsFromLecturerId(Integer userId) {
         return repository.findEventsFromUserId(userId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
+    //service: สำหรับเรียก event-detail ที่สัมพันธ์กับ lecturer
+
 
     //    service: filter-by-upcoming
-    public List<EventDTO> getEventsByUpcoming(){
+    public List<EventDTO> getEventsByUpcoming() {
         if (repository.getEventsByUpcoming().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NO_CONTENT);
         }
         return repository.getEventsByUpcoming().stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
+    public List<EventDTO> getEventsByUpcomingByEmail() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (repository.getEventsByUpcoming().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT);
+        }
+        return repository.getEventsByUpcomingByEmail(email).stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+
+    public List<EventDTO> getEventsByUpcomingByCategoryOwner(Integer userId) {
+        if (repository.getEventsByUpcoming().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT);
+        }
+        return repository.getEventsByUpcomingByCategoryOwner(userId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+
+
     //    service: filter-by-past
-    public List<EventDTO> getEventsByPast(){
+    public List<EventDTO> getEventsByPast() {
         if (repository.getEventsByPast().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NO_CONTENT);
         }
         return repository.getEventsByPast().stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
+    public List<EventDTO> getEventsByPastByEmail() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (repository.getEventsByUpcoming().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT);
+        }
+        return repository.getEventsByPastByEmail(email).stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+
+    public List<EventDTO> getEventsByPastByCategoryOwner(Integer userId) {
+        if (repository.getEventsByUpcoming().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT);
+        }
+        return repository.getEventsByPastByCategoryOwner(userId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+
+
     //    service: filter-by-specificDate
-    public List<EventDTO> getEventsByEventStartTime(String eventStartTime){
-        if (repository.getEventsByEventStartTime(eventStartTime).isEmpty()){
+    public List<EventDTO> getEventsByEventStartTime(String eventStartTime) {
+        if (repository.getEventsByEventStartTime(eventStartTime).isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NO_CONTENT);
         }
         return repository.getEventsByEventStartTime(eventStartTime).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
+
+    public List<EventDTO> getEventsByEventStartTimeByEmail(String eventStartTime) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (repository.getEventsByEventStartTime(eventStartTime).isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT);
+        }
+        return repository.getEventsByEventStartTimeByEmail(eventStartTime, email).stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+
+    public List<EventDTO> getEventsByEventStartTimeByCategoryOwner(String eventStartTime, Integer userId) {
+        if (repository.getEventsByEventStartTime(eventStartTime).isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT);
+        }
+        return repository.getEventsByEventStartTimeByCategoryOwner(eventStartTime, userId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+
 
     //    serviceMethod: convert-Entity-to-DTO (ใช้งานใน serviceMethod เกี่ยวกับการ GET-EVENTS ทั้งสิ้น )
     private EventDTO convertEntityToDto(Event event) {
@@ -166,6 +243,38 @@ public class EventService {
 //        }
 //        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 //        String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString(); || role.contains("admin")
+
+        //if start time is not exactly same with other event in the same category
+        List<Event> eventsList = repository.findAll();
+        for (int i = 0; i < eventsList.size(); i++) {
+            if (newEvent.getEventStartTime().equals(eventsList.get(i).getEventStartTime())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "StartTime cannot be the same.");
+            }
+        }
+
+        // Creating a simple mail message
+        SimpleMailMessage mailMessage
+                = new SimpleMailMessage();
+
+        // Setting up necessary details
+        mailMessage.setFrom(sender);
+        mailMessage.setTo(newEvent.getBookingEmail());
+        mailMessage.setText("Booking Name: " + newEvent.getBookingName() + "\n" +
+                "Event Category: " + newEvent.getEventCategoryName() + "\n" +
+                "Booking Email: " + newEvent.getBookingEmail() + "\n" +
+                "When:" + newEvent.getEventStartTime().toLocalDate() +
+                ' ' + newEvent.getEventStartTime().toLocalTime() +
+                " - " + newEvent.getEventStartTime().plusMinutes(newEvent.getEventDuration()).toLocalTime() + " (ICT)" + '\n' +
+                "Event Notes: " + newEvent.getEventNotes());
+        mailMessage.setSubject("[OASIP] " + newEvent.getEventCategoryName() + " @ " +
+                newEvent.getEventStartTime().toLocalDate() +
+                ' ' + newEvent.getEventStartTime().toLocalTime() +
+                " - " + newEvent.getEventStartTime().plusMinutes(newEvent.getEventDuration()).toLocalTime() + " (ICT)");
+
+        // Sending the mail
+        javaMailSender.send(mailMessage);
+
+
         Event event = modelMapper.map(newEvent, Event.class);
 //        if(email == null || email == newEvent.getBookingEmail()){
 //            return repository.saveAndFlush(event);
