@@ -265,6 +265,14 @@ public class EventController {
                 throw new ResponseStatusException(HttpStatus.CONFLICT);
             }
         }
+        if(newEvent.getBookingName().length() == 0){
+            System.out.println("Booking Name must be filled out! === status 417");
+            throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED);
+        }
+        if (newEvent.getBookingEmail().length() == 0){
+            System.out.println("Booking Email must be filled out! === status 400");
+            throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED);
+        }
         if (role.contains("lecturer")) {
             System.out.println("role: " + role);
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
