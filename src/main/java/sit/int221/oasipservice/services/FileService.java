@@ -3,9 +3,11 @@ package sit.int221.oasipservice.services;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
@@ -22,6 +24,7 @@ public class FileService {
     @Value("${upload.path}")
     private String uploadPath;
 
+    // Init folder
     @PostConstruct
     public void init() {
         try {
@@ -76,6 +79,15 @@ public class FileService {
             return Collections.emptyList();
         } catch (IOException e) {
             throw new RuntimeException("Could not list the files!");
+        }
+    }
+    public void deleteByName(String fileName) {
+        if (FileSystemUtils.deleteRecursively(Paths.get(uploadPath + "/" + fileName).toFile()) == true) {
+            System.out.println(Paths.get(uploadPath + "/" + fileName));
+            System.out.println( FileSystemUtils.deleteRecursively(Paths.get(uploadPath + "/" + fileName).toFile()));
+            FileSystemUtils.deleteRecursively(Paths.get(uploadPath + "/" + fileName).toFile());
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
     }
 }

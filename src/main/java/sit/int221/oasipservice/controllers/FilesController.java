@@ -62,9 +62,9 @@ public class FilesController {
         String filename = path.getFileName()
                 .toString();
         fileData.setFilename(filename);
-        fileData.setUrl(MvcUriComponentsBuilder.fromMethodName(FilesController.class, "getFile", filename)
-                .build()
-                .toString());
+        fileData.setUrl("http://localhost:8080/api/files/" + filename);
+//        fileData.setUrl("https://intproj21.sit.kmutt.ac.th/pl5//api/files/"+filename);
+
         try {
             fileData.setSize(Files.size(path));
         } catch (IOException e) {
@@ -82,5 +82,10 @@ public class FilesController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
                 .body(file);
+    }
+
+    @DeleteMapping("/{fileName}")
+    public void delete(@PathVariable String fileName) {
+        fileService.deleteByName(fileName);
     }
 }

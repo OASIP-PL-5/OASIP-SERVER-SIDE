@@ -67,49 +67,55 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
         http.csrf().disable()
                 .authorizeRequests()
                 //public endpoints
-                .antMatchers("/api/login").permitAll()
-                .antMatchers(HttpMethod.GET,"/api/event-categories/**").permitAll()
+                .antMatchers(HttpMethod.POST, "/api/login").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/event-categories/**").permitAll()
 
                 //filter menu
-                .antMatchers(HttpMethod.GET,"/api/events/getByEventCategories/{eventCategoryId}").hasAnyAuthority("admin","lecturer","student")
-                .antMatchers(HttpMethod.GET,"/api/events/getEventByUpcoming").hasAnyAuthority("admin","lecturer","student")
-                .antMatchers(HttpMethod.GET,"/api/events/getEventByPast").hasAnyAuthority("admin","lecturer","student")
-                .antMatchers(HttpMethod.GET,"/api/events/getEventsByEventStartTime/{eventStartTime}").hasAnyAuthority("admin","lecturer","student")
+                .antMatchers(HttpMethod.GET, "/api/events/getByEventCategories/{eventCategoryId}").hasAnyAuthority("admin", "lecturer", "student")
+                .antMatchers(HttpMethod.GET, "/api/events/getEventByUpcoming").hasAnyAuthority("admin", "lecturer", "student")
+                .antMatchers(HttpMethod.GET, "/api/events/getEventByPast").hasAnyAuthority("admin", "lecturer", "student")
+                .antMatchers(HttpMethod.GET, "/api/events/getEventsByEventStartTime/{eventStartTime}").hasAnyAuthority("admin", "lecturer", "student")
 
                 //send email
-                .antMatchers(HttpMethod.POST,"/api/email/sendMail").permitAll()
+                .antMatchers(HttpMethod.POST, "/api/email/sendMail").permitAll()
 
 //                .antMatchers("/api/events/**").permitAll()
-//                .antMatchers("/api/match").permitAll()
+                .antMatchers("/api/match").hasAuthority("admin")
                 // ใช้ได้เฉพาะมี token ถึงจะเข้า /users ได้
 //                .antMatchers(HttpMethod.GET,"/api/users").permitAll()
-                .antMatchers(HttpMethod.POST,"/api/users").permitAll()
-                .antMatchers(HttpMethod.GET,"/api/events/{id}").permitAll()
-                .antMatchers(HttpMethod.POST,"/api/events").permitAll()
+                .antMatchers(HttpMethod.POST, "/api/users").hasAuthority("admin")
+                .antMatchers(HttpMethod.POST, "/api/users/**").hasAuthority("admin")
+                .antMatchers("/api/users").hasAuthority("admin")
+                .antMatchers(HttpMethod.GET, "/api/events/{id}").permitAll()
+                .antMatchers(HttpMethod.POST, "/api/events").permitAll()
 
-
+                //file-management
+                .antMatchers(HttpMethod.POST, "/api/files").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/files/**").permitAll()
+                .antMatchers(HttpMethod.DELETE, "/api/files/**").permitAll()
 
                 //privilege endpoint
 
                 //admin สามารถจัดการ category ได้
                 .antMatchers("/api/event-categories/").access("hasAuthority('admin')")
-                .antMatchers(HttpMethod.PUT,"/api/event-categories/{id}").hasAuthority("admin")
+                .antMatchers(HttpMethod.PUT, "/api/event-categories/{id}").hasAuthority("admin")
 //                lecturer สามารถดู detail event-categories (ที่ตนรับผิดชอบเท่านั้น)
-                .antMatchers(HttpMethod.GET,"/api/event-categories/{id}").hasAuthority("lecturer")
-                .antMatchers(HttpMethod.POST,"/api/refresh").hasAnyAuthority("admin","lecturer","student")
+                .antMatchers(HttpMethod.GET, "/api/event-categories/{id}").hasAuthority("lecturer")
+                .antMatchers(HttpMethod.POST, "/api/refresh").hasAnyAuthority("admin", "lecturer", "student")
 
                 //admin สามารถจัดการ event ได้
 //                .antMatchers("/api/events/").access("hasAuthority('admin')")
 
                 //admin สามารถ get user และ match passowrd ได้
-                .antMatchers(HttpMethod.GET,"/api/users").hasAuthority("admin")
-                .antMatchers(HttpMethod.POST,"/api/match").hasAuthority("admin")
+//                .antMatchers(HttpMethod.GET,"/api/users").hasAnyAuthority("admin","lecturer","student")
+                .antMatchers(HttpMethod.GET, "/api/users").hasAnyAuthority("admin", "student", "lecturer")
+                .antMatchers(HttpMethod.POST, "/api/match").hasAuthority("admin")
 
                 //student สามารถ get put delete event ของตัวเองได้
-                .antMatchers("/api/events/").hasAnyAuthority("admin","student")
+                .antMatchers("/api/events/").hasAnyAuthority("admin", "student")
 
                 //lecturer สามารถ get event ที่ category ของตัวเองได้
-                .antMatchers(HttpMethod.GET,"/api/events/{id}").hasAnyAuthority("admin","lecturer")
+                .antMatchers(HttpMethod.GET, "/api/events/{id}").hasAnyAuthority("admin", "lecturer")
 
                 .anyRequest().authenticated()
                 .and()

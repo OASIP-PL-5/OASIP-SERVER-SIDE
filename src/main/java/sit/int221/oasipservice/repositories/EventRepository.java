@@ -102,4 +102,10 @@ public interface EventRepository extends JpaRepository<Event, Integer>, JpaSpeci
     //get all event by email
     @Query(value = "select * from event e where e.bookingEmail = :e ORDER BY eventStartTime DESC", nativeQuery = true)
     List<Event> findByEmail(@Param("e") String email);
+
+    //    get all event-start-time
+    @Query(
+            value = "SELECT * FROM event e  ORDER BY eventStartTime DESC ", nativeQuery = true
+    )
+    List<Event> getAllEvents();
 }
