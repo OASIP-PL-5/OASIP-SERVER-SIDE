@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import sit.int221.oasipservice.entities.Event;
 import sit.int221.oasipservice.entities.User;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface EventRepository extends JpaRepository<Event, Integer>, JpaSpecificationExecutor<Event> {
@@ -108,4 +109,10 @@ public interface EventRepository extends JpaRepository<Event, Integer>, JpaSpeci
             value = "SELECT * FROM event e  ORDER BY eventStartTime DESC ", nativeQuery = true
     )
     List<Event> getAllEvents();
+
+    //    get all event-start-time
+    @Query(
+            value = "select * from event e where eventStartTime = :st", nativeQuery = true
+    )
+    List<Event> findEventByStartTime(@Param("st")LocalDateTime eventStartTime);
 }
