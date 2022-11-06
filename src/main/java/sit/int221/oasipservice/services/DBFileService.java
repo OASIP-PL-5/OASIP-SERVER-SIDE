@@ -11,6 +11,7 @@ import sit.int221.oasipservice.repositories.FileRepository;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 
@@ -22,15 +23,19 @@ public class DBFileService {
     @Autowired
     private EventRepository eventRepository;
 
-    public File storeFile(MultipartFile file, LocalDateTime eventStartTime) throws Exception {
-        List<Event> bookingId =  eventRepository.findEventByStartTime(eventStartTime);
+    public File storeFile(MultipartFile file, String eventStartTime) throws Exception {
+        System.out.println("eventStartTime from form/data : "+eventStartTime);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime startTime = LocalDateTime.parse(eventStartTime,formatter);
+        System.out.println("eventStarttime from booking-event : "+startTime);
+        List<Event> bookingId =  eventRepository.findEventByStartTime(startTime);
+        System.out.println("booking Id from eventStartTime : "+bookingId.get(0).getId());
         String fileName = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
 
         try {
             if (fileName.contains("..")) {
                 throw new Exception("Sorry! Filename contains invalid path sequence " + fileName);
             }
-
 //constructor::  File(String id, String fileName,String fileType, byte[] data)
             File file1 = new File(bookingId.get(0).getId(),fileName, file.getContentType(), file.getBytes());
             return fileRepository.save(file1);

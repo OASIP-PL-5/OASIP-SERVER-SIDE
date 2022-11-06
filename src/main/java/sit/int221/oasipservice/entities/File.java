@@ -16,7 +16,8 @@ public class File {
     private String id;
 
 //    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "event_bookingId", nullable = false)
+//    @JoinColumn(name = "event_bookingId", nullable = false)
+    @Column(name = "event_bookingId")
     private Integer eventBooking;
 
     @Column(name = "fileType", length = 45)

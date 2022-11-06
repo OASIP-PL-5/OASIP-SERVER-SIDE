@@ -18,6 +18,7 @@ import sit.int221.oasipservice.repositories.FileRepository;
 import sit.int221.oasipservice.services.DBFileService;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import java.time.LocalDateTime;
 
 
@@ -35,7 +36,7 @@ public class FilesController {
 //    }
 
     @PostMapping("/upload")
-    public Response uploadFile(@RequestParam("file") MultipartFile file, @RequestBody LocalDateTime eventStartTime) throws Exception {
+    public Response uploadFile(@RequestParam("file") MultipartFile file, @RequestParam("eventStartTime") String eventStartTime) throws Exception {
         File fileName = dbFileService.storeFile(file,eventStartTime);
 
         String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
