@@ -25,7 +25,7 @@ public class DBFileService {
 
     public File storeFile(MultipartFile file, String eventStartTime) throws Exception {
         System.out.println("eventStartTime from form/data : "+eventStartTime);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
         LocalDateTime startTime = LocalDateTime.parse(eventStartTime,formatter);
         System.out.println("eventStarttime from booking-event : "+startTime);
         List<Event> bookingId =  eventRepository.findEventByStartTime(startTime);
