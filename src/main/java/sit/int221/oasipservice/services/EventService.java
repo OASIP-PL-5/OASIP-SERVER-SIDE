@@ -64,9 +64,11 @@ public class EventService {
 
     //  service: get-by-bookingId
     public List<EventDTO> getSimpleEventById(Integer bookingId) {
-
         return repository.findById(bookingId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
+
+
+
 
     //    service: getEventDetails-by-bookingId-and-lecturerId
     public List<EventDTO> getDetailByLecturerIdAndBookingId(Integer userId, Integer bookingId) {
@@ -196,6 +198,7 @@ public class EventService {
         return eventDTO;
     }
 
+
 //    public List<SimpleEventDTO> getEventCatNameBySearch(String eventCategoryName) {
 //        Event event = repository.findCategoryByName(eventCategoryName)
 //                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND
@@ -308,8 +311,6 @@ public class EventService {
 //                new ResponseStatusException(HttpStatus.NOT_FOUND, bookingId + " does not exist !"));
 //        return modelMapper.map(event, SimpleEventDTO.class);
 //    }
-
-
 
 
 //    public void init() {

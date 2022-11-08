@@ -1,8 +1,11 @@
 package sit.int221.oasipservice.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -10,20 +13,17 @@ import org.springframework.web.server.ResponseStatusException;
 import sit.int221.oasipservice.dtos.EditEventDTO;
 import sit.int221.oasipservice.dtos.EventDTO;
 import sit.int221.oasipservice.dtos.NewEventDTO;
-import sit.int221.oasipservice.entities.Event;
-import sit.int221.oasipservice.entities.EventCategory;
-import sit.int221.oasipservice.entities.EventCategoryOwner;
-import sit.int221.oasipservice.entities.User;
-import sit.int221.oasipservice.repositories.EventCategoryOwnerRepository;
-import sit.int221.oasipservice.repositories.EventCategoryRepository;
-import sit.int221.oasipservice.repositories.EventRepository;
-import sit.int221.oasipservice.repositories.UserRepository;
+import sit.int221.oasipservice.entities.*;
+import sit.int221.oasipservice.repositories.*;
+import sit.int221.oasipservice.services.DBFileService;
 import sit.int221.oasipservice.services.EmailService;
 import sit.int221.oasipservice.services.EventService;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.lang.reflect.Array;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -35,7 +35,14 @@ public class EventController {
     private UserRepository userRepository;
 
     @Autowired
+    FileRepository fileRepository;
+
+
+    @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private DBFileService dbFileService;
 
 
     @Autowired
@@ -91,6 +98,23 @@ public class EventController {
         String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
         User userEmail = userRepository.findByEmail(email);
         Event storedEventDetails = repository.getById(bookingId);
+//        File getFile = (File) fileRepository.getFileByBookingId(bookingId);
+//        System.out.println("ได้ file : " + getFile);
+
+        // check if there is a file with this bookingId
+        List<File> getFile = fileRepository.getFileByBookingId(bookingId);
+
+
+        if (getFile.size() > 0) {
+//            System.out.println("ได้ file : " + getFile);
+//            System.out.println(fileRepository.getFileByBookingId(bookingId));
+            System.out.println(fileRepository.getFileByBookingId(bookingId).get(0).getId());
+            System.out.println(fileRepository.getFileByBookingId(bookingId).get(0).getFileName());
+//            return eventService.getEventWithFileByBookingId(bookingId);
+
+        }else {
+            System.out.println("no file in this bookingId");
+        }
 
 //        สำหรับกรองข้อมูลของ lecturer
         String lecEmail = SecurityContextHolder.getContext().getAuthentication().getName();
