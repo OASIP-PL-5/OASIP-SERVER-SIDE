@@ -114,5 +114,12 @@ public interface EventRepository extends JpaRepository<Event, Integer>, JpaSpeci
     @Query(
             value = "select * from event e where eventStartTime = :st", nativeQuery = true
     )
-    List<Event> findEventByStartTime(@Param("st")LocalDateTime eventStartTime);
+    List<Event> findEventByStartTime(@Param("st") LocalDateTime eventStartTime);
+
+//    //    Event join File condition : BookingId
+//    @Query(
+//            value = "select * from event e join file f on e.bookingId = f.event_bookingId where e.bookingId = :e", nativeQuery = true
+//    )
+//    List<Event> findEventWithFileByEventId(@Param("e") Integer bookingId);
+
 }

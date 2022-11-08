@@ -36,7 +36,8 @@ public class FilesController {
 //    }
 
     @PostMapping("/upload")
-    public Response uploadFile(@RequestParam("file") MultipartFile file, @RequestParam("eventStartTime") String eventStartTime) throws Exception {
+    public Response uploadFile(@RequestParam("file") MultipartFile file,
+                               @RequestParam("eventStartTime") String eventStartTime) throws Exception {
         File fileName = dbFileService.storeFile(file,eventStartTime);
 
         String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
@@ -48,17 +49,26 @@ public class FilesController {
 
     }
 
-//---------------------------------------------------------------
+    //---------------------------------------------------------------
     // test post man ใส่ /downloadFile/<fileId>
     @GetMapping("/download/{fileId:.+}")
     public ResponseEntity<Resource> downloadFile(@PathVariable String fileId, HttpServletRequest request) {
         // Load file as Resource
         File file = dbFileService.getFileById(fileId);
+        
+
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(file.getFileType()))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFileName() + "\"")
                 .body(new ByteArrayResource(file.getData()));
+    }
+    //---------------------------------------------------------------
+
+    //Patch
+    @PatchMapping("/update/{bookingId}")
+    public void updateFile(@PathVariable Integer bookingId,@RequestParam("file") MultipartFile file) throws Exception {
+        dbFileService.updateFile(bookingId,file);
     }
 
 

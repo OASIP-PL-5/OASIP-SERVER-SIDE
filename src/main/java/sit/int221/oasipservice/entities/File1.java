@@ -1,17 +1,23 @@
 //package sit.int221.oasipservice.entities;
 //
-//import org.hibernate.annotations.GenericGenerator;
+//import lombok.AllArgsConstructor;
+//import lombok.NoArgsConstructor;
 //
 //import javax.persistence.*;
 //
+//
 //@Entity
-//@Table(name = "file")
-//public class File_old {
-//    @Id
-//    @GeneratedValue(generator = "uuid")
-//    @GenericGenerator(name="uuid", strategy = "uuid2")
-//    @Column(name = "fileId", nullable = false, length = 200)
-//    private String id;
+//@Table(name = "file", indexes = {
+//        @Index(name = "fk_file_event_idx", columnList = "event_bookingId")
+//})
+//public class File {
+//    @EmbeddedId
+//    private FileId id;
+//
+//    @MapsId("eventBookingid")
+//    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+//    @JoinColumn(name = "event_bookingId", nullable = false)
+//    private Event eventBooking;
 //
 //    @Column(name = "fileType", length = 45)
 //    private String fileType;
@@ -22,14 +28,16 @@
 //    @Column(name = "data")
 //    private byte[] data;
 //
-//    public File_old(){
 //
-//    }
 //
-//    public File_old(String fileName, String fileType, byte[] data) {
+//    public File(String fileName, String fileType, byte[] data) {
 //        this.fileName = fileName;
 //        this.fileType = fileType;
 //        this.data = data;
+//    }
+//
+//    public File() {
+//
 //    }
 //
 //    public byte[] getData() {
@@ -56,11 +64,19 @@
 //        this.fileType = fileType;
 //    }
 //
-//    public String getId() {
+//    public Event getEventBooking() {
+//        return eventBooking;
+//    }
+//
+//    public void setEventBooking(Event eventBooking) {
+//        this.eventBooking = eventBooking;
+//    }
+//
+//    public FileId getId() {
 //        return id;
 //    }
 //
-//    public void setId(String id) {
+//    public void setId(FileId id) {
 //        this.id = id;
 //    }
 //}
