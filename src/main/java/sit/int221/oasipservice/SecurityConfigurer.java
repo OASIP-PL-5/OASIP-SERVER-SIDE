@@ -93,6 +93,7 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.POST, "/api/files/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/files/**").permitAll()
                 .antMatchers(HttpMethod.DELETE, "/api/files/**").permitAll()
+                .antMatchers(HttpMethod.PATCH, "/api/files/**").permitAll()
 
 
                 //privilege endpoint

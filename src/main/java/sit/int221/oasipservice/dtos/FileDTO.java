@@ -10,7 +10,8 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class FileDTO {
-//    private String id;
+    //    private String id;
+    private Integer bookingId;
     private String fileName;
     private String fileType;
     private byte[] data;

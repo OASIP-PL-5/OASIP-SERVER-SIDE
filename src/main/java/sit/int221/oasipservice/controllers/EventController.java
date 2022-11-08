@@ -102,19 +102,29 @@ public class EventController {
 //        System.out.println("ได้ file : " + getFile);
 
         // check if there is a file with this bookingId
-        List<File> getFile = fileRepository.getFileByBookingId(bookingId);
+//        List<File> getFile = fileRepository.getFileByBookingId(bookingId);
+
+        File getFile = fileRepository.getFileByBookingId(bookingId);
+        if (getFile != null){
+            System.out.println(fileRepository.getFileByBookingId(bookingId).getId());
+            System.out.println(fileRepository.getFileByBookingId(bookingId).getFileName());
+            System.out.println(fileRepository.getFileByBookingId(bookingId).getFileType());
+        }else {
+            System.out.println("No file found");
+        }
 
 
-        if (getFile.size() > 0) {
-//            System.out.println("ได้ file : " + getFile);
-//            System.out.println(fileRepository.getFileByBookingId(bookingId));
-            System.out.println(fileRepository.getFileByBookingId(bookingId).get(0).getId());
-            System.out.println(fileRepository.getFileByBookingId(bookingId).get(0).getFileName());
+
+//        if (getFile.size() > 0) {
+////            System.out.println("ได้ file : " + getFile);
+////            System.out.println(fileRepository.getFileByBookingId(bookingId));
+//            System.out.println(fileRepository.getFileByBookingId(bookingId).get(0).getId());
+//            System.out.println(fileRepository.getFileByBookingId(bookingId).get(0).getFileName());
 //            return eventService.getEventWithFileByBookingId(bookingId);
 
-        }else {
-            System.out.println("no file in this bookingId");
-        }
+//        }else {
+//            System.out.println("no file in this bookingId");
+//        }
 
 //        สำหรับกรองข้อมูลของ lecturer
         String lecEmail = SecurityContextHolder.getContext().getAuthentication().getName();

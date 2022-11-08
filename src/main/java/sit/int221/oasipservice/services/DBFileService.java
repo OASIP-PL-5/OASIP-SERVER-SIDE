@@ -51,6 +51,7 @@ public class DBFileService {
         return fileRepository.findById(fileId)
                 .orElseThrow(() -> new RuntimeException("File not found with id " + fileId));
     }
+
     public File getFileByBookingId(Integer bookingId) {
         return (File) fileRepository.getFileByBookingId(bookingId);
     }
@@ -71,27 +72,29 @@ public class DBFileService {
 //            }
 //        }
 //    }
-    public File updateFile(Integer bookingId,MultipartFile file) throws Exception{
 
-    String fileName = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
-
+    //    service for update-file
+    public File updateFile(Integer bookingId, MultipartFile file) throws Exception {
+        String fileName = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
         try {
-        if (fileName.contains("..")) {
-            throw new Exception("Sorry! Filename contains invalid path sequence " + fileName);
-        }
-        File file1 = new File(bookingId , fileName, file.getContentType(), file.getBytes());//<-- Id มันเป็นหาจาก bookingId
-
+            if (fileName.contains("..")) {
+                throw new Exception("Sorry! Filename contains invalid path sequence " + fileName);
+            }
+//            File file1 = new File(bookingId, fileName, file.getContentType(), file.getBytes());//<-- Id มันเป็นหาจาก bookingId
+            File fileDetail = fileRepository.getFileByBookingId(bookingId);
+            fileDetail.setFileName(fileName);
+            fileDetail.setFileType(file.getContentType());
+            fileDetail.setData(file.getBytes());
 
 //            return (File) fileRepository.updateFile(fileId,fileName, file.getContentType(), file.getBytes());
-            return  fileRepository.saveAndFlush(file1);
-    }
-        catch (Exception ex) {
+            return fileRepository.saveAndFlush(fileDetail);
+        } catch (Exception ex) {
             System.out.println(bookingId);
             System.out.println(fileName);
             System.out.println(file.getContentType());
             System.out.println(file.getBytes());
 //            throw new Exception("Could not update file " + fileName + ". Please try again!", ex);
-            throw new Exception("Could not update file" + fileName +". Please try again!",ex);
+            throw new Exception("Could not update file" + fileName + ". Please try again!", ex);
         }
     }
 }

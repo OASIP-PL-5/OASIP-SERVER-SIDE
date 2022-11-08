@@ -14,7 +14,7 @@ public interface FileRepository extends JpaRepository<File, String> {
     @Query(
             value = "SELECT * FROM file WHERE event_bookingId = :id ", nativeQuery = true
     )
-    List<File> getFileByBookingId(@Param("id") Integer event_bookingId);
+    File getFileByBookingId(@Param("id") Integer event_bookingId);
 
     // update file
     @Modifying
