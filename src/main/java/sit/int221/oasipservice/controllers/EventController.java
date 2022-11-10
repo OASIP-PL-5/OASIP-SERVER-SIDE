@@ -1,45 +1,48 @@
 package sit.int221.oasipservice.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import sit.int221.oasipservice.UploadFileResponse;
 import sit.int221.oasipservice.dtos.EditEventDTO;
 import sit.int221.oasipservice.dtos.EventDTO;
 import sit.int221.oasipservice.dtos.NewEventDTO;
-import sit.int221.oasipservice.entities.Event;
-import sit.int221.oasipservice.entities.EventCategory;
-import sit.int221.oasipservice.entities.EventCategoryOwner;
-import sit.int221.oasipservice.entities.User;
-import sit.int221.oasipservice.repositories.EventCategoryOwnerRepository;
-import sit.int221.oasipservice.repositories.EventCategoryRepository;
-import sit.int221.oasipservice.repositories.EventRepository;
-import sit.int221.oasipservice.repositories.UserRepository;
+import sit.int221.oasipservice.entities.*;
+import sit.int221.oasipservice.repositories.*;
+import sit.int221.oasipservice.services.DBFileService;
 import sit.int221.oasipservice.services.EmailService;
 import sit.int221.oasipservice.services.EventService;
-import sit.int221.oasipservice.services.FileStorageService;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.lang.reflect.Array;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/events")
 public class EventController {
     @Autowired
-    private FileStorageService fileStorageService;
-
-    @Autowired
     private EventService eventService;
     private EventRepository repository;
     private UserRepository userRepository;
 
     @Autowired
+    FileRepository fileRepository;
+
+
+    @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private DBFileService dbFileService;
 
 
     @Autowired
@@ -95,6 +98,33 @@ public class EventController {
         String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
         User userEmail = userRepository.findByEmail(email);
         Event storedEventDetails = repository.getById(bookingId);
+//        File getFile = (File) fileRepository.getFileByBookingId(bookingId);
+//        System.out.println("ได้ file : " + getFile);
+
+        // check if there is a file with this bookingId
+//        List<File> getFile = fileRepository.getFileByBookingId(bookingId);
+
+        File getFile = fileRepository.getFileByBookingId(bookingId);
+        if (getFile != null){
+            System.out.println(fileRepository.getFileByBookingId(bookingId).getId());
+            System.out.println(fileRepository.getFileByBookingId(bookingId).getFileName());
+            System.out.println(fileRepository.getFileByBookingId(bookingId).getFileType());
+        }else {
+            System.out.println("No file found");
+        }
+
+
+
+//        if (getFile.size() > 0) {
+////            System.out.println("ได้ file : " + getFile);
+////            System.out.println(fileRepository.getFileByBookingId(bookingId));
+//            System.out.println(fileRepository.getFileByBookingId(bookingId).get(0).getId());
+//            System.out.println(fileRepository.getFileByBookingId(bookingId).get(0).getFileName());
+//            return eventService.getEventWithFileByBookingId(bookingId);
+
+//        }else {
+//            System.out.println("no file in this bookingId");
+//        }
 
 //        สำหรับกรองข้อมูลของ lecturer
         String lecEmail = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -127,13 +157,13 @@ public class EventController {
         Integer userId = user.getId();
         //getrole
         String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
-        if(role.contains("student")){
+        if (role.contains("student")) {
             System.out.println(userId);
             return eventService.getByEventCategoryByEmail(eventCategoryId);
-        }else if (role.contains("lecturer")){
+        } else if (role.contains("lecturer")) {
             System.out.println(userId);
-            return eventService.getByEventCategoryByLecturerOwner(eventCategoryId,userId);
-        }else{
+            return eventService.getByEventCategoryByLecturerOwner(eventCategoryId, userId);
+        } else {
             System.out.println(userId);
             return eventService.getByEventCategory(eventCategoryId);
         }
@@ -178,13 +208,11 @@ public class EventController {
         Integer userId = user.getId();
         //getrole
         String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
-        if(role.contains("student")){
+        if (role.contains("student")) {
             return eventService.getEventsByUpcomingByEmail();
-        }
-        else if (role.contains("lecturer")){
+        } else if (role.contains("lecturer")) {
             return eventService.getEventsByUpcomingByCategoryOwner(userId);
-        }
-        else{
+        } else {
             return eventService.getEventsByUpcoming();
         }
     }
@@ -198,13 +226,11 @@ public class EventController {
         Integer userId = user.getId();
         //getrole
         String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
-        if(role.contains("student")){
+        if (role.contains("student")) {
             return eventService.getEventsByPastByEmail();
-        }
-        else if (role.contains("lecturer")){
+        } else if (role.contains("lecturer")) {
             return eventService.getEventsByPastByCategoryOwner(userId);
-        }
-        else{
+        } else {
             return eventService.getEventsByPast();
         }
     }
@@ -218,13 +244,11 @@ public class EventController {
         Integer userId = user.getId();
         //getrole
         String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
-        if(role.contains("student")){
-            return  eventService.getEventsByEventStartTimeByEmail(eventStartTime);
-        }
-        else if (role.contains("lecturer")){
-            return eventService.getEventsByEventStartTimeByCategoryOwner(eventStartTime,userId);
-        }
-        else{
+        if (role.contains("student")) {
+            return eventService.getEventsByEventStartTimeByEmail(eventStartTime);
+        } else if (role.contains("lecturer")) {
+            return eventService.getEventsByEventStartTimeByCategoryOwner(eventStartTime, userId);
+        } else {
             return eventService.getEventsByEventStartTime(eventStartTime);
         }
     }
@@ -232,13 +256,31 @@ public class EventController {
     //    create new event
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
-    public Event create(@Valid @RequestBody NewEventDTO newEvent, MultipartFile file) {
+    public Event create(@Valid @RequestBody NewEventDTO newEvent) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
         String newEventEmail = newEvent.getBookingEmail();
 
-        System.out.println("before condition post [email] : "+email);
-        System.out.println("before condition post [role] : "+role);
+        LocalDateTime newEventStartTime = newEvent.getEventStartTime();
+        List<Event> eventStartTime = repository.getAllEvents();
+        System.out.println("before condition post [email] : " + email);
+        System.out.println("before condition post [role] : " + role);
+        for (int i = 0; i < eventStartTime.size(); i++) {
+            System.out.println(eventStartTime.get(i).getEventStartTime());
+            System.out.println(eventStartTime.get(i).getEventStartTime().isEqual(newEventStartTime));
+            if (eventStartTime.get(i).getEventStartTime().isEqual(newEventStartTime)) {
+                System.out.println("overlap condition");
+                throw new ResponseStatusException(HttpStatus.CONFLICT);
+            }
+        }
+        if (newEvent.getBookingName().length() == 0) {
+            System.out.println("Booking Name must be filled out! === status 417");
+            throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED);
+        }
+        if (newEvent.getBookingEmail().length() == 0) {
+            System.out.println("Booking Email must be filled out! === status 400");
+            throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED);
+        }
         if (role.contains("lecturer")) {
             System.out.println("role: " + role);
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
@@ -246,29 +288,13 @@ public class EventController {
         if (role.contains("admin")
                 || role.contains("[ROLE_ANONYMOUS]")
                 || role.contains("student")) {
-            //change file name to event name
-            String fileName = fileStorageService.storeFile(file);
-            String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                    .path("/fileUpload/")
-                    .path(fileName)
-                    .toUriString();
-            System.out.println("email : "+email);
+            System.out.println("email : " + email);
             System.out.println("role: " + role);
             System.out.println("post event success !!!");
             return eventService.save(newEvent);
-        }
-//        else if (email.contains("anonymousUser")) {
-//            User findEmail = userRepository.findByEmail(newEventEmail);
-//            System.out.println("anonymousUser condition passed");
-//            if (findEmail == null) {
-//                System.out.println("findEmail condition passed");
-//                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-//            }
-//            return eventService.save(newEvent);
-//        }
-        else {
+        } else {
             System.out.println("else condition");
-            System.out.println("email : "+email);
+            System.out.println("email : " + email);
             System.out.println("role: " + role);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
@@ -317,7 +343,38 @@ public class EventController {
 //        repository.deleteById(bookingId);
     }
 
-    //upload file to local folder
-
-
+    // วิธีแบบ รวม POST event และ file ใน endpoint เดียวกัน
+//    @PostMapping(value = "/newEventWithFile")
+//    @ResponseStatus(HttpStatus.CREATED)
+//    @RequestMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
+//    public Event createWithFile(@Valid @RequestBody NewEventDTO newEvent, @RequestBody MultipartFile file) {
+//        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+//        String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
+//        String newEventEmail = newEvent.getBookingEmail();
+//        //create event with file upload
+//        System.out.println("before condition post [email] : " + email);
+//        System.out.println("before condition post [role] : " + role);
+//        if (role.contains("lecturer")) {
+//            System.out.println("role: " + role);
+//            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+//        }
+//        if (role.contains("admin")
+//                || role.contains("[ROLE_ANONYMOUS]")
+//                || role.contains("student")) {
+//            System.out.println("email : " + email);
+//            System.out.println("role: " + role);
+//            System.out.println("post event success !!!");
+//            if (!file.isEmpty()) {
+//                eventService.saveWithFile(newEvent, file);
+//                throw new ResponseStatusException(HttpStatus.CREATED, "Event created successfully" + newEvent);
+//            } else {
+//                return eventService.save(newEvent);
+//            }
+//        } else {
+//            System.out.println("else condition");
+//            System.out.println("email : " + email);
+//            System.out.println("role: " + role);
+//            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+//        }
+//    }
 }

@@ -1,5 +1,6 @@
 package sit.int221.oasipservice;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
 @ConfigurationProperties(prefix = "file")
 public class FileStorageProperties {
     private String uploadDir;

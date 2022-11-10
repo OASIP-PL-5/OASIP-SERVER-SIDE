@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import sit.int221.oasipservice.entities.Event;
 import sit.int221.oasipservice.entities.User;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface EventRepository extends JpaRepository<Event, Integer>, JpaSpecificationExecutor<Event> {
@@ -102,4 +103,23 @@ public interface EventRepository extends JpaRepository<Event, Integer>, JpaSpeci
     //get all event by email
     @Query(value = "select * from event e where e.bookingEmail = :e ORDER BY eventStartTime DESC", nativeQuery = true)
     List<Event> findByEmail(@Param("e") String email);
+
+    //    get all event-start-time
+    @Query(
+            value = "SELECT * FROM event e  ORDER BY eventStartTime DESC ", nativeQuery = true
+    )
+    List<Event> getAllEvents();
+
+    //    get all event-start-time
+    @Query(
+            value = "select * from event e where eventStartTime = :st", nativeQuery = true
+    )
+    List<Event> findEventByStartTime(@Param("st") LocalDateTime eventStartTime);
+
+//    //    Event join File condition : BookingId
+//    @Query(
+//            value = "select * from event e join file f on e.bookingId = f.event_bookingId where e.bookingId = :e", nativeQuery = true
+//    )
+//    List<Event> findEventWithFileByEventId(@Param("e") Integer bookingId);
+
 }

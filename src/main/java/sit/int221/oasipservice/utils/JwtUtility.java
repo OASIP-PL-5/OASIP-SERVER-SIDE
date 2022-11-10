@@ -120,5 +120,21 @@ public class JwtUtility implements Serializable {
         return new UsernamePasswordAuthenticationToken(userDetails, "", authorities);
     }
 
-
+    //generate token for ms team
+    public String generateTokenMs(Map<String, Object> claims,String subject) {
+//        User getUser = userRepository.findByEmail(subject);
+        return Jwts.builder().setSubject(subject)
+                .claim("role",claims.get("role"))
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
+                .signWith(SignatureAlgorithm.HS512, secret).compact();
+    }
+    public String generateReTokenMs(Map<String, Object> claims,String subject) {
+//        User getUser = userRepository.findByEmail(subject);
+        return Jwts.builder().setSubject(subject)
+                .claim("role",claims.get("role"))
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY_REFRESH * 1000))
+                .signWith(SignatureAlgorithm.HS512, secret).compact();
+    }
 }
