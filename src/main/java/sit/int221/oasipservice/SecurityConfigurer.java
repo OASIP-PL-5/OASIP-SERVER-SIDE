@@ -70,8 +70,6 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.POST, "/api/login").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/event-categories/**").permitAll()
 
-                .antMatchers("/").permitAll()
-                .antMatchers("/api/mslogin").permitAll()
                 //filter menu
                 .antMatchers(HttpMethod.GET, "/api/events/getByEventCategories/{eventCategoryId}").hasAnyAuthority("admin", "lecturer", "student")
                 .antMatchers(HttpMethod.GET, "/api/events/getEventByUpcoming").hasAnyAuthority("admin", "lecturer", "student")

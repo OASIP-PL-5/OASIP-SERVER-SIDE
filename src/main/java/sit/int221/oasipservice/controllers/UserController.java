@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 //import sit.int221.oasipservice.dtos.NewUserDTO;
 import sit.int221.oasipservice.dtos.MatchPasswordDTO;
+import sit.int221.oasipservice.dtos.SendMailDTO;
 import sit.int221.oasipservice.dtos.UserDTO;
 import sit.int221.oasipservice.entities.User;
 import sit.int221.oasipservice.repositories.UserRepository;
@@ -123,5 +124,11 @@ public class UserController {
 //        return userService.checkLogin(matchPasswordDTO);
 //    }
 
+    //use post to send email to change password
+    @PostMapping("/forgot-password")
+    public ResponseEntity forgotPassword(@Valid @RequestBody String email) {
+        userService.sendMail(email);
+        throw new ResponseStatusException(HttpStatus.OK, "Please check your email to change password");
+    }
 
 }

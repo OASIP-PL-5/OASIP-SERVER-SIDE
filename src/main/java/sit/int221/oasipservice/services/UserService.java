@@ -5,9 +5,12 @@ import de.mkammerer.argon2.Argon2Factory;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -41,6 +44,12 @@ public class UserService implements UserDetailsService {
 
     @Autowired
     private JwtUtility jwtUtility;
+
+    @Autowired
+    private JavaMailSender javaMailSender;
+
+    @Value("${spring.mail.username}")
+    private String sender;
 
     public List<UserDTO> getAllUserByDTO() {
         return repository.findAll(Sort.by(Sort.Direction.ASC, "name")).stream().map(this::convertEntityToDto).collect(Collectors.toList());
@@ -143,5 +152,20 @@ public class UserService implements UserDetailsService {
 
 
         return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), Collections.emptyList());
+    }
+
+    //send mail
+    public void sendMail(String email){
+        // Creating a simple mail message
+        SimpleMailMessage mailMessage
+                = new SimpleMailMessage();
+
+        // Setting up necessary details
+        mailMessage.setFrom(sender);
+        mailMessage.setTo(email);
+        mailMessage.setText("https://intproj21.sit.kmutt.ac.th/pl5/"); //<-https://intproj21.sit.kmutt.ac.th/pl5/?token="+service.gentoken() maybe
+        mailMessage.setSubject("Change Password");
+
+        javaMailSender.send(mailMessage);
     }
 }
