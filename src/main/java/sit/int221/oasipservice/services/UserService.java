@@ -156,16 +156,22 @@ public class UserService implements UserDetailsService {
 
     //send mail
     public void sendMail(String email){
-        // Creating a simple mail message
-        SimpleMailMessage mailMessage
-                = new SimpleMailMessage();
+        //check user by email
+        User user = repository.findByEmail(email);
+        if(user == null){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }else{
+            // Creating a simple mail message
+            SimpleMailMessage mailMessage
+                    = new SimpleMailMessage();
 
-        // Setting up necessary details
-        mailMessage.setFrom(sender);
-        mailMessage.setTo(email);
-        mailMessage.setText("https://intproj21.sit.kmutt.ac.th/pl5/"); //<-https://intproj21.sit.kmutt.ac.th/pl5/?token="+service.gentoken() maybe
-        mailMessage.setSubject("Change Password");
+            // Setting up necessary details
+            mailMessage.setFrom(sender);
+            mailMessage.setTo(email);
+            mailMessage.setText("https://intproj21.sit.kmutt.ac.th/pl5/"); //<-https://intproj21.sit.kmutt.ac.th/pl5/?token="+service.gentoken() maybe
+            mailMessage.setSubject("Change Password");
 
-        javaMailSender.send(mailMessage);
+            javaMailSender.send(mailMessage);
+        }
     }
 }
