@@ -9,6 +9,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import sit.int221.oasipservice.dtos.EventDTO;
 import sit.int221.oasipservice.dtos.NewEventDTO;
@@ -18,11 +19,17 @@ import sit.int221.oasipservice.entities.User;
 import sit.int221.oasipservice.repositories.EventRepository;
 import sit.int221.oasipservice.repositories.UserRepository;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class EventService {
+    @Value("${upload.path}")
+    private String uploadPath;
     private final EventRepository repository;
     private final UserRepository userRepository;
 
@@ -57,9 +64,11 @@ public class EventService {
 
     //  service: get-by-bookingId
     public List<EventDTO> getSimpleEventById(Integer bookingId) {
-
         return repository.findById(bookingId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
+
+
+
 
     //    service: getEventDetails-by-bookingId-and-lecturerId
     public List<EventDTO> getDetailByLecturerIdAndBookingId(Integer userId, Integer bookingId) {
@@ -189,6 +198,7 @@ public class EventService {
         return eventDTO;
     }
 
+
 //    public List<SimpleEventDTO> getEventCatNameBySearch(String eventCategoryName) {
 //        Event event = repository.findCategoryByName(eventCategoryName)
 //                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND
@@ -302,4 +312,62 @@ public class EventService {
 //        return modelMapper.map(event, SimpleEventDTO.class);
 //    }
 
+
+//    public void init() {
+//        try {
+//            Files.createDirectories(Paths.get(uploadPath));
+//        } catch (IOException e) {
+//            throw new RuntimeException("Could not create upload folder!");
+//        }
+//    }
+
+    public void saveWithFile(NewEventDTO newEvent, MultipartFile file) {
+        //if start time is not exactly same with other event in the same category
+        List<Event> eventsList = repository.findAll();
+        for (int i = 0; i < eventsList.size(); i++) {
+            if (newEvent.getEventStartTime().equals(eventsList.get(i).getEventStartTime())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "StartTime cannot be the same.");
+            }
+        }
+        try {
+            Path root = Paths.get(uploadPath);
+            if (!Files.exists(root)) {
+//                init();
+                try {
+                    //change filename to bookingId
+                    String fileName = newEvent.getBookingName();
+                    Files.createDirectories(Paths.get(uploadPath));
+                } catch (IOException e) {
+                    throw new RuntimeException("Could not create upload folder!");
+                }
+            }
+            Files.copy(file.getInputStream(), root.resolve(file.getOriginalFilename()));
+        } catch (Exception e) {
+            throw new RuntimeException("Could not store the file. Error: " + e.getMessage());
+        }
+
+        // Creating a simple mail message
+        SimpleMailMessage mailMessage
+                = new SimpleMailMessage();
+        // Setting up necessary details
+        mailMessage.setFrom(sender);
+        mailMessage.setTo(newEvent.getBookingEmail());
+        mailMessage.setText("Booking Name: " + newEvent.getBookingName() + "\n" +
+                "Event Category: " + newEvent.getEventCategoryName() + "\n" +
+                "Booking Email: " + newEvent.getBookingEmail() + "\n" +
+                "When:" + newEvent.getEventStartTime().toLocalDate() +
+                ' ' + newEvent.getEventStartTime().toLocalTime() +
+                " - " + newEvent.getEventStartTime().plusMinutes(newEvent.getEventDuration()).toLocalTime() + " (ICT)" + '\n' +
+                "Event Notes: " + newEvent.getEventNotes());
+        mailMessage.setSubject("[OASIP] " + newEvent.getEventCategoryName() + " @ " +
+                newEvent.getEventStartTime().toLocalDate() +
+                ' ' + newEvent.getEventStartTime().toLocalTime() +
+                " - " + newEvent.getEventStartTime().plusMinutes(newEvent.getEventDuration()).toLocalTime() + " (ICT)");
+
+        // Sending the mail
+        javaMailSender.send(mailMessage);
+        Event event = modelMapper.map(newEvent, Event.class);
+        repository.saveAndFlush(event);
+        throw new ResponseStatusException(HttpStatus.OK, "Event created successfully");
+    }
 }

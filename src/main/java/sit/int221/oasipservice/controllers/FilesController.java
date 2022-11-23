@@ -1,91 +1,113 @@
 package sit.int221.oasipservice.controllers;
 
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
-import sit.int221.oasipservice.models.FileData;
-import sit.int221.oasipservice.models.UploadResponseMessage;
-import sit.int221.oasipservice.services.FileService;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import sit.int221.oasipservice.entities.Event;
+import sit.int221.oasipservice.entities.File;
+import sit.int221.oasipservice.payload.Response;
+import sit.int221.oasipservice.repositories.EventRepository;
+import sit.int221.oasipservice.repositories.FileRepository;
+import sit.int221.oasipservice.services.DBFileService;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
+
 
 @RestController
 @RequestMapping("/api/files")
 public class FilesController {
-    private final FileService fileService;
 
     @Autowired
-    public FilesController(FileService fileService) {
-        this.fileService = fileService;
+    private DBFileService dbFileService;
+    @Autowired
+    private FileRepository fileRepository;
+    @Autowired
+    private EventRepository eventRepository;
+
+//    public FileUploadController(DBFileService dbFileService) {
+//        this.dbFileService = dbFileService;
+//    }
+
+    @PostMapping("/upload")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Response uploadFile(@RequestParam(value="file",required=false) MultipartFile file,
+                               @RequestParam(value="eventStartTime",required=false) String eventStartTime) throws Exception {
+        File fileName = dbFileService.storeFile(file, eventStartTime);
+
+        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/files/download/")
+                .path(fileName.getId())
+                .toUriString();
+
+        return new Response(fileName.getFileName(), fileDownloadUri, file.getContentType(), file.getSize());
+
     }
 
-    @PostMapping
-    public ResponseEntity<UploadResponseMessage> uploadFile(@RequestParam("file") MultipartFile file) {
-        try {
-            fileService.save(file);
+    // get all files
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllFiles() {
+        return new ResponseEntity<>(fileRepository.findAll(), HttpStatus.OK);
+    }
 
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(new UploadResponseMessage("Uploaded the file successfully: " + file.getOriginalFilename()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
-                    .body(new UploadResponseMessage("Could not upload the file: " + file.getOriginalFilename() + "!"));
+    // get file by bookingId
+    @GetMapping("/{bookingId}")
+    public ResponseEntity<?> getFileByBookingId(@PathVariable Integer bookingId) {
+        File getFile = dbFileService.getFileByBookingId(bookingId);
+        if (getFile == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found");
+        } else {
+            return new ResponseEntity<>(fileRepository.getFileByBookingId(bookingId), HttpStatus.OK);
         }
     }
 
-    @GetMapping
-    public ResponseEntity<List<FileData>> getListFiles() {
-        List<FileData> fileInfos = fileService.loadAll()
-                .stream()
-                .map(this::pathToFileData)
-                .collect(Collectors.toList());
 
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(fileInfos);
-    }
-
-    @DeleteMapping
-    public void delete() {
-        fileService.deleteAll();
-    }
-
-    private FileData pathToFileData(Path path) {
-        FileData fileData = new FileData();
-        String filename = path.getFileName()
-                .toString();
-        fileData.setFilename(filename);
-        fileData.setUrl(MvcUriComponentsBuilder.fromMethodName(FilesController.class, "getFile", filename)
-                .build()
-                .toString());
-        try {
-            fileData.setSize(Files.size(path));
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Error: " + e.getMessage());
-        }
-
-        return fileData;
-    }
-
-    @GetMapping("{filename:.+}")
-    @ResponseBody
-    public ResponseEntity<Resource> getFile(@PathVariable String filename) {
-        Resource file = fileService.load(filename);
+    //---------------------------------------------------------------
+    // test post man ใส่ /downloadFile/<fileId>
+    @GetMapping("/download/{fileId:.+}")
+    public ResponseEntity<Resource> downloadFile(@PathVariable String fileId, HttpServletRequest request) {
+        // Load file as Resource
+        File file = dbFileService.getFileById(fileId);
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
-                .body(file);
+                .contentType(MediaType.parseMediaType(file.getFileType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFileName() + "\"")
+                .body(new ByteArrayResource(file.getData()));
+    }
+    //---------------------------------------------------------------
+
+    //Patch
+    @PatchMapping("/update/{bookingId}")
+    public void updateFile(@PathVariable Integer bookingId, @RequestParam("file") MultipartFile file) throws Exception {
+        File getFile = dbFileService.getFileByBookingId(bookingId);
+//        Event isBookingIdExist = eventRepository.getById(bookingId);
+//        System.out.println("Event exist :" + isBookingIdExist.getBookingName());
+        if (getFile == null ) {
+//            dbFileService.storeFile(file, bookingId);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found");
+        }  dbFileService.updateFile(bookingId, file);
     }
 
-    @DeleteMapping("/{fileName}")
-    public void delete(@PathVariable String fileName){
-        fileService.deleteByName(fileName);
+
+//---------------------------------------------------------------
+
+    //    Delete
+    @DeleteMapping("/delete/{fileId}")
+    public void deleteFile(@PathVariable String fileId) {
+        fileRepository.findById(fileId).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, fileId + " does not exist !"));
+        fileRepository.deleteById(fileId);
     }
+
+
 }

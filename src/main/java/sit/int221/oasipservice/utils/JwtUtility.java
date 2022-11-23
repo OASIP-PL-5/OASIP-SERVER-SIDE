@@ -78,6 +78,7 @@ public class JwtUtility implements Serializable {
         return Jwts.builder().setSubject(subject)
                 .claim("role",getUser.getRole())
                 .claim("id",getUser.getId())
+                .claim("username",getUser.getName())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
                 .signWith(SignatureAlgorithm.HS512, secret).compact();
@@ -102,6 +103,7 @@ public class JwtUtility implements Serializable {
         return Jwts.builder().setSubject(subject)
                 .claim("role",getUser.getRole())
                 .claim("id",getUser.getId())
+                .claim("username",getUser.getName())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY_REFRESH * 1000))
                 .signWith(SignatureAlgorithm.HS512, secret).compact();
@@ -121,4 +123,25 @@ public class JwtUtility implements Serializable {
     }
 
 
+
+
+    //generate token for ms team
+    public String generateTokenMs(Map<String, Object> claims,String subject) {
+//        User getUser = userRepository.findByEmail(subject);
+        return Jwts.builder().setSubject(subject)
+                .setClaims(claims)
+//                .claim("role",claims.get("role"))
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
+                .signWith(SignatureAlgorithm.HS512, secret).compact();
+    }
+    public String generateReTokenMs(Map<String, Object> claims,String subject) {
+//        User getUser = userRepository.findByEmail(subject);
+        return Jwts.builder().setSubject(subject)
+                .setClaims(claims)
+//                .claim("role",claims.get("role"))
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY_REFRESH * 1000))
+                .signWith(SignatureAlgorithm.HS512, secret).compact();
+    }
 }
