@@ -19,13 +19,13 @@ public class MsLoginController {
     @Autowired
     private JwtUtility jwtUtility;
 
-    @GetMapping("")
-    public ResponseEntity tokenDetails(@AuthenticationPrincipal OidcUser principal) {
-        Map<String, Object> claims = principal.getIdToken().getClaims();
-        String email = (String) claims.get("email");
-        //call services to generate token and refresh token
-        String token = jwtUtility.generateTokenMs(claims,email);
-        String refreshToken = jwtUtility.generateReTokenMs(claims,email);
-        return ResponseEntity.ok(new JwtResponse(token, refreshToken));
-    }
+//    @GetMapping("")
+//    public ResponseEntity tokenDetails(@AuthenticationPrincipal OidcUser principal) {
+//        Map<String, Object> claims = principal.getIdToken().getClaims();
+//        String email = (String) claims.get("email");
+//        //call services to generate token and refresh token
+//        String token = jwtUtility.generateTokenMs(claims,email);
+//        String refreshToken = jwtUtility.generateReTokenMs(claims,email);
+//        return ResponseEntity.ok(new JwtResponse(token, refreshToken));
+//    }
 }

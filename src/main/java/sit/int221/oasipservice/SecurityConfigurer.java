@@ -69,6 +69,7 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 //public endpoints
                 .antMatchers(HttpMethod.POST, "/api/login").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/event-categories/**").permitAll()
+                .antMatchers(HttpMethod.POST, "/api/users/forgot-password").permitAll()
 
                 //filter menu
                 .antMatchers(HttpMethod.GET, "/api/events/getByEventCategories/{eventCategoryId}").hasAnyAuthority("admin", "lecturer", "student")

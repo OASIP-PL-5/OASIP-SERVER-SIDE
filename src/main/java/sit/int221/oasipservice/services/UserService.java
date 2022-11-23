@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 //import sit.int221.oasipservice.dtos.NewUserDTO;
 import org.springframework.web.server.ResponseStatusException;
 import sit.int221.oasipservice.dtos.MatchPasswordDTO;
+import sit.int221.oasipservice.dtos.SendMailDTO;
 import sit.int221.oasipservice.dtos.UserDTO;
 import sit.int221.oasipservice.entities.User;
 import sit.int221.oasipservice.repositories.UserRepository;
@@ -27,7 +28,7 @@ import sit.int221.oasipservice.utils.JwtUtility;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@AllArgsConstructor
+//@AllArgsConstructor
 @Service
 public class UserService implements UserDetailsService {
     @Autowired
@@ -155,23 +156,22 @@ public class UserService implements UserDetailsService {
     }
 
     //send mail
-    public void sendMail(String email){
+    public void sendMail(SendMailDTO email){
         //check user by email
-        User user = repository.findByEmail(email);
-        if(user == null){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        }else{
+//        User user = repository.findByEmail(email);
+//        System.out.println("email: " + email);
+        System.out.println("email: " + email.getEmail());
             // Creating a simple mail message
             SimpleMailMessage mailMessage
                     = new SimpleMailMessage();
 
             // Setting up necessary details
             mailMessage.setFrom(sender);
-            mailMessage.setTo(email);
+            mailMessage.setTo(email.getEmail());
             mailMessage.setText("https://intproj21.sit.kmutt.ac.th/pl5/"); //<-https://intproj21.sit.kmutt.ac.th/pl5/?token="+service.gentoken() maybe
             mailMessage.setSubject("Change Password");
 
             javaMailSender.send(mailMessage);
-        }
+
     }
 }
