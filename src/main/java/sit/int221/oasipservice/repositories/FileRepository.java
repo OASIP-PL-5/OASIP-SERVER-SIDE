@@ -23,5 +23,10 @@ public interface FileRepository extends JpaRepository<File, String> {
     )
     List<File> updateFile(@Param("fileId") String fileId, @Param("fileName") String fileName, @Param("fileType") String fileType, @Param("data") byte[] data);
 
+    //    delete file by bookingId
+    @Query(
+            value = "delete from file WHERE event_bookingId = :bookId ", nativeQuery = true
+    )
+    File deleteFileByBookingId(@Param("bookId") Integer bookId);
 }
 

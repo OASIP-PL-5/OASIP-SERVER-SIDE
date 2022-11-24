@@ -2,8 +2,6 @@ package sit.int221.oasipservice.utils;
 
 import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -14,6 +12,11 @@ import sit.int221.oasipservice.models.RefreshToken;
 import sit.int221.oasipservice.repositories.UserRepository;
 
 import java.io.Serializable;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -34,8 +37,14 @@ public class JwtUtility implements Serializable {
     public String getUsernameFromToken(String token) {
         return getClaimFromToken(token, Claims::getSubject);
     }
+    public String getUsernameFromAzureToken(String token){
+        return getClaimFromAzureToken(token, Claims::getSubject);
+    }
 
     public Date getExpirationDateFromToken(String token) {
+        return getClaimFromToken(token, Claims::getExpiration);
+    }
+    public Date getExpirationDateFromAzureToken(String token) {
         return getClaimFromToken(token, Claims::getExpiration);
     }
 
@@ -43,15 +52,28 @@ public class JwtUtility implements Serializable {
         final Claims claims = getAllClaimsFromToken(token);
         return claimsResolver.apply(claims);
     }
+    public <T> T getClaimFromAzureToken(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = getAllClaimsFromAzureToken(token);
+        return claimsResolver.apply(claims);
+    }
+
 
     private Claims getAllClaimsFromToken(String token) {
         return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+    }
+    private Claims getAllClaimsFromAzureToken(String token) {
+        return Jwts.parser().setSigningKey(String.valueOf(secret)).parseClaimsJws(token).getBody();
     }
 
     private Boolean isTokenExpired(String token) {
         final Date expiration = getExpirationDateFromToken(token);
         return expiration.before(new Date());
     }
+    private Boolean isAzureTokenExpired(String token) {
+        final Date expiration = getExpirationDateFromAzureToken(token);
+        return expiration.before(new Date());
+    }
+
 
     public String generateNewToken(RefreshToken token) {
         String email = getUsernameFromToken(token.getToken());
@@ -78,6 +100,7 @@ public class JwtUtility implements Serializable {
         return Jwts.builder().setSubject(subject)
                 .claim("role",getUser.getRole())
                 .claim("id",getUser.getId())
+                .claim("username",getUser.getName())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
                 .signWith(SignatureAlgorithm.HS512, secret).compact();
@@ -88,6 +111,12 @@ public class JwtUtility implements Serializable {
         final String username = getUsernameFromToken(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
+    public Boolean validateAzureToken(String token, UserDetails userDetails) {
+        final String username = getUsernameFromAzureToken(token);
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    }
+
+
 
     public String generateRefreshToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
@@ -102,6 +131,7 @@ public class JwtUtility implements Serializable {
         return Jwts.builder().setSubject(subject)
                 .claim("role",getUser.getRole())
                 .claim("id",getUser.getId())
+                .claim("username",getUser.getName())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY_REFRESH * 1000))
                 .signWith(SignatureAlgorithm.HS512, secret).compact();
@@ -119,6 +149,5 @@ public class JwtUtility implements Serializable {
 
         return new UsernamePasswordAuthenticationToken(userDetails, "", authorities);
     }
-
 
 }

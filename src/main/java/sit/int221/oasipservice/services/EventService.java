@@ -56,10 +56,14 @@ public class EventService {
         return repository.findAll(Sort.by(Sort.Direction.DESC, "eventStartTime")).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
-    //get all event by email
+    //get all event by email : token from oasip
     public List<EventDTO> getAllUserByEmail() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return repository.findByEmail(email).stream().map(this::convertEntityToDto).collect(Collectors.toList());
+    }
+    //get all event by email : token from ms-azure
+    public List<EventDTO> getAllUserByEmailAzure(String emailAzure) {
+        return repository.findByEmail(emailAzure).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
     //  service: get-by-bookingId

@@ -1,10 +1,11 @@
 package sit.int221.oasipservice.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
-import sit.int221.oasipservice.dtos.FileDTO;
+import org.springframework.web.server.ResponseStatusException;
 import sit.int221.oasipservice.entities.Event;
 import sit.int221.oasipservice.entities.File;
 import sit.int221.oasipservice.repositories.EventRepository;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static java.lang.String.valueOf;
 
@@ -48,12 +50,17 @@ public class DBFileService {
     }
 
     public File getFileById(String fileId) {
-        return fileRepository.findById(fileId)
+        Optional<File> findFile = fileRepository.findById(fileId);
+        if (findFile.isEmpty()) {
+            System.out.println("file not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "file not found");
+        }
+            return fileRepository.findById(fileId)
                 .orElseThrow(() -> new RuntimeException("File not found with id " + fileId));
     }
 
     public File getFileByBookingId(Integer bookingId) {
-        return (File) fileRepository.getFileByBookingId(bookingId);
+        return  fileRepository.getFileByBookingId(bookingId);
     }
 
 

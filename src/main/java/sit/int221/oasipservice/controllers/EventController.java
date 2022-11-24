@@ -1,14 +1,11 @@
 package sit.int221.oasipservice.controllers;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import sit.int221.oasipservice.dtos.EditEventDTO;
 import sit.int221.oasipservice.dtos.EventDTO;
@@ -21,10 +18,9 @@ import sit.int221.oasipservice.services.EventService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.lang.reflect.Array;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/events")
@@ -58,34 +54,74 @@ public class EventController {
 
     // Get all-events
 // lecturer ดู events-lists  ของตัวเองเท่านั้น
+// guest, student, admin สามารถดู event ทั้งหมดได้ ...
+// แต่ guest ดูแบบ blinded-event & student-blinded-event เฉพาะ event ที่ไม่ใช่ของตัวเอง
     @GetMapping("")
-    public List<EventDTO> getAllEvent() {
-        //get users'id from email by token
-        String lecEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByEmail(lecEmail);
-        //get category by users'id
-        List<EventCategoryOwner> eventCategoryOwner = eventCategoryOwnerRepository.findByUserid(user.getId());
-        //get categoryid from category
-
-
-//        ขั้นตอนนี้จะ
-        int lecId = user.getId();
-        List<EventCategoryOwner> categoryId = eventCategoryOwnerRepository.findByUserid(lecId);
-//
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
-//        if (role.contains("admin")) {
-        if (role.contains("student")) {
-//            return eventService.getAllEventByDTO();
-            return eventService.getAllUserByEmail();
-        } else if (role.contains("lecturer")) {
-            System.out.println("ผ่าน role: lecturer");
-//            System.out.println("ได้ cateID : " + ำ);
-            return eventService.getEventsFromLecturerId(lecId);
-        } else {
-//            return eventService.getAllUserByEmail();
+    public List<EventDTO> getAllEvent(HttpServletRequest request) {
+        System.out.println("\n--------\nการทำงานของ getAllEvent()\n--------");
+        if (request.getHeader("Authorization") == null) {
+            System.out.println("this is [guest] user");
             return eventService.getAllEventByDTO();
+        } else {
+//        ทั้งหมดนี้ ต้องทำในเงื่อนไขที่รับ token เท่านั้น ถ้าไม่มี token ให้เป็น guest
+            final String authorizationHeader = request.getHeader("Authorization");
+            String token = authorizationHeader.substring(7);
+            DecodedJWT tokenDecoded = JWT.decode(token);
+//        เช็คว่าตรงกับ algorithm ไหน เป็นของ azure ดีกว่า
+            System.out.println(tokenDecoded.getAlgorithm());
+//หาก algorithm เป็น RS256 ก็เท่ากับ เป็น token จาก azure
+            if (tokenDecoded.getAlgorithm().contains("RS256")) {
+                System.out.println("this is token from azure");
+                if (tokenDecoded.getClaims().get("roles") == null) {
+                    System.out.println("หากไม่มี role ใน token-claims จะเข้าเงื่อนไขนี้");
+                    System.out.println("เมื่อเข้าเงื่อนไขนี้สำเร็จ ให้นับว่าเป็น student");
+                    return eventService.getAllEventByDTO();
+                } else if (tokenDecoded.getClaims().get("roles") != null) {
+                    String msRole = tokenDecoded.getClaims().get("roles").toString();
+                    String msEmail = tokenDecoded.getClaims().get("preferred_username").toString();
+                    String msName = tokenDecoded.getClaims().get("name").toString();
+                    System.out.println("this is cliaims from jwtAzure(roles) : " + msRole);
+                    System.out.println("this is cliaims from jwtAzure(email) : " + msEmail);
+                    System.out.println("this is cliaims from jwtAzure(name) : " + msName);
+
+                    if (msRole.contains("admin") || msRole.contains("student")) {
+                        System.out.println("ms [admin] or [student] role : " + msRole);
+                        return eventService.getAllEventByDTO();
+                    } else if (msRole.contains("lecturer")) {
+                        System.out.println("ms [lecturer] role : " + msRole);
+                        User user = userRepository.findByEmail(msEmail);
+                        Integer lecId = user.getId();
+                        return eventService.getEventsFromLecturerId(lecId);
+                    }
+                }
+            }
+//        หาก algorithm != RS256 ก็เท่ากับว่า ไม่ใช่ azuretoken (เป็น token ปกติจากระบบ oasip)
+//            token from oasip system
+            else {
+                System.out.println("token from oasip-system");
+                String userTokenEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+                String userTokenRole = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
+                System.out.println("user email from token : " + userTokenEmail);
+                System.out.println("user role from token : " + userTokenRole);
+
+                //get users'id from email by token
+                String lecEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+                User user = userRepository.findByEmail(lecEmail);
+//        ขั้นตอนนี้จะ
+                int lecId = user.getId();
+//
+                String email = SecurityContextHolder.getContext().getAuthentication().getName();
+                String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
+                if (role.contains("lecturer")) {
+                    System.out.println("this user is [lecturer] : " + role);
+                    return eventService.getEventsFromLecturerId(lecId);
+                } else if (role.contains("admin") || role.contains("student")) {
+                    System.out.println("this user is [admin] or [student] : " + role);
+                    return eventService.getAllEventByDTO();
+                }
+            }
         }
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "something went wrong");
     }
 
     // Get event-by-bookingId
@@ -96,25 +132,13 @@ public class EventController {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         //get role from token
         String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
-        User userEmail = userRepository.findByEmail(email);
         Event storedEventDetails = repository.getById(bookingId);
-//        File getFile = (File) fileRepository.getFileByBookingId(bookingId);
-//        System.out.println("ได้ file : " + getFile);
 
-        // check if there is a file with this bookingId
-        File getFile = fileRepository.getFileByBookingId(bookingId);
-
-
-//        if (getFile.size() > 0) {
-////            System.out.println("ได้ file : " + getFile);
-////            System.out.println(fileRepository.getFileByBookingId(bookingId));
-//            System.out.println(fileRepository.getFileByBookingId(bookingId).get(0).getId());
-//            System.out.println(fileRepository.getFileByBookingId(bookingId).get(0).getFileName());
-////            return eventService.getEventWithFileByBookingId(bookingId);
-//
-//        }else {
-//            System.out.println("no file in this bookingId");
-//        }
+        Optional<Event> findEvent = repository.findById(bookingId);
+        if (findEvent.isEmpty()) {
+            System.out.println("Event not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "event not found");
+        }
 
 //        สำหรับกรองข้อมูลของ lecturer
         String lecEmail = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -138,7 +162,6 @@ public class EventController {
     }
 
     //filter-by-eventCategoryId
-
     @GetMapping("/getByEventCategories/{eventCategoryId}")
     public List<EventDTO> getByEventCategory(@PathVariable Integer eventCategoryId) {
         //find user id from email
@@ -298,7 +321,14 @@ public class EventController {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         //get role from token
         String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
-        User userEmail = userRepository.findByEmail(email);
+
+//        User userEmail = userRepository.findByEmail(email);
+        Optional<Event> findEvent = repository.findById(id);
+        if (findEvent.isEmpty()) {
+            System.out.println("Event not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "event not found");
+        }
+
         Event storedEventDetails = repository.getById(id);
         storedEventDetails.setId(updateEvent.getId());
         storedEventDetails.setEventStartTime(updateEvent.getEventStartTime());
@@ -319,6 +349,12 @@ public class EventController {
         //get role from token
         String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
         User userEmail = userRepository.findByEmail(email);
+//        กรองว่าเจอ event-booking ในการ delete ไหม
+        Optional<Event> findEvent = repository.findById(bookingId);
+        if (findEvent.isEmpty()) {
+            System.out.println("Event not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "event not found");
+        }
         Event storedEventDetails = repository.getById(bookingId);
         if (storedEventDetails.getBookingEmail().equals(email) || role.contains("admin")) {
 //            return repository.saveAndFlush(storedEventDetails);
