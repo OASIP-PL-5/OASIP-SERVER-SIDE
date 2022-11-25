@@ -71,6 +71,10 @@ public class EventService {
         return repository.findById(bookingId).stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
+    // service: get-blinded-event-by-bookingId
+    public List<EventDTO> getBlindEventById(Integer bookingId) {
+        return repository.findById(bookingId).stream().map(this::convertBlindEventEntityToDto).collect(Collectors.toList());
+    }
 
 
 
@@ -201,6 +205,17 @@ public class EventService {
         eventDTO.setEventCategoryName(event.getEventCategory().getEventCategoryName());
         return eventDTO;
     }
+
+    //    serviceMethod: convert-Entity-to-DTO (ใช้งานใน serviceMethod เกี่ยวกับการ GET-EVENTS ทั้งสิ้น )
+    private EventDTO convertBlindEventEntityToDto(Event event) {
+        EventDTO blindEventDTO = new EventDTO();
+        blindEventDTO.setBookingName(event.getBookingName());
+        blindEventDTO.setEventStartTime(event.getEventStartTime());
+        blindEventDTO.setEventDuration(event.getEventDuration());
+        blindEventDTO.setEventCategoryName(event.getEventCategory().getEventCategoryName());
+        return blindEventDTO;
+    }
+
 
 
 //    public List<SimpleEventDTO> getEventCatNameBySearch(String eventCategoryName) {

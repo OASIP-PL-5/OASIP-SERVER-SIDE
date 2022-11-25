@@ -86,9 +86,11 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.POST,"/api/users").hasAuthority("admin")
                 .antMatchers(HttpMethod.POST,"/api/users/**").hasAuthority("admin")
                 .antMatchers("/api/users").hasAuthority("admin")
-                .antMatchers(HttpMethod.GET,"/api/events/{id}").permitAll()
+//permit all ให้หมด เพื่อรับมือ azure-token
                 .antMatchers(HttpMethod.POST,"/api/events").permitAll()
                 .antMatchers(HttpMethod.GET,"/api/events").permitAll()
+                .antMatchers(HttpMethod.GET,"/api/events/{bookingId}").permitAll()
+                .antMatchers(HttpMethod.DELETE,"/api/events/{bookingId}").permitAll()
 
 
 
@@ -109,11 +111,9 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.GET,"/api/users").hasAnyAuthority("admin","student","lecturer")
                 .antMatchers(HttpMethod.POST,"/api/match").hasAuthority("admin")
 
-                //student สามารถ get put delete event ของตัวเองได้
-                .antMatchers(HttpMethod.GET,"/api/events/").permitAll()
 
                 //lecturer สามารถ get event ที่ category ของตัวเองได้
-                .antMatchers(HttpMethod.GET,"/api/events/{id}").hasAnyAuthority("admin","lecturer")
+//                .antMatchers(HttpMethod.GET,"/api/events/{id}").hasAnyAuthority("admin","lecturer")
 
                 .anyRequest().authenticated()
                 .and()

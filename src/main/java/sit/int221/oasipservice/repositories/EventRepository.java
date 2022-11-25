@@ -122,4 +122,9 @@ public interface EventRepository extends JpaRepository<Event, Integer>, JpaSpeci
 //    )
 //    List<Event> findEventWithFileByEventId(@Param("e") Integer bookingId);
 
+//check event by email
+    @Query(
+            value = "select * from event  where bookingEmail = :e and bookingId = :i", nativeQuery = true
+    )
+    List<Event> getEventByBookingEmailAndBookingId(@Param("e") String bookingEmail, @Param("i") Integer bookingId);
 }
