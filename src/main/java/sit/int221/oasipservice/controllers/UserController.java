@@ -1,6 +1,8 @@
 package sit.int221.oasipservice.controllers;
 
 
+import de.mkammerer.argon2.Argon2;
+import de.mkammerer.argon2.Argon2Factory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,10 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 //import sit.int221.oasipservice.dtos.NewUserDTO;
-import sit.int221.oasipservice.dtos.MatchPasswordDTO;
-import sit.int221.oasipservice.dtos.NewEventDTO;
-import sit.int221.oasipservice.dtos.SendMailDTO;
-import sit.int221.oasipservice.dtos.UserDTO;
+import sit.int221.oasipservice.dtos.*;
 import sit.int221.oasipservice.entities.User;
 import sit.int221.oasipservice.repositories.UserRepository;
 import sit.int221.oasipservice.services.UserService;
@@ -131,6 +130,23 @@ public class UserController {
         System.out.println(email);
         userService.sendMail(email);
         return ResponseEntity.ok().build();
+    }
+    @PutMapping("/forgot")
+    public User forgotPassword(@Valid @RequestBody NewPasswordDTO newPasswordDTO) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User updateUserDetails = repository.findByEmail(email);
+        //encrypt password with argon2 before save to database
+        if (newPasswordDTO.getPassword().length() < 8 || newPasswordDTO.getPassword().length() > 14) {
+            System.out.println("invalid number of password : " + newPasswordDTO.getPassword().length());
+//            return new ResponseEntity("The password must be between 8 and 14 characters long", HttpStatus.BAD_REQUEST);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The password must be between 8 and 14 characters long");
+        }
+        System.out.println("valid number of password (8-14): " + newPasswordDTO.getPassword() + " --> (" + newPasswordDTO.getPassword().length() + ")");
+        Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id, 16, 16);
+        String hash = argon2.hash(2, 16, 1, newPasswordDTO.getPassword());
+        newPasswordDTO.setPassword(hash);
+        updateUserDetails.setPassword(newPasswordDTO.getPassword());
+        return repository.saveAndFlush(updateUserDetails);
     }
 
 }

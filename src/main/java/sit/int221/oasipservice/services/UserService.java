@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 //import sit.int221.oasipservice.dtos.NewUserDTO;
 import org.springframework.web.server.ResponseStatusException;
 import sit.int221.oasipservice.dtos.MatchPasswordDTO;
+import sit.int221.oasipservice.dtos.NewPasswordDTO;
 import sit.int221.oasipservice.dtos.SendMailDTO;
 import sit.int221.oasipservice.dtos.UserDTO;
 import sit.int221.oasipservice.entities.User;
@@ -172,6 +173,25 @@ public class UserService implements UserDetailsService {
             mailMessage.setSubject("Change Password");
 
             javaMailSender.send(mailMessage);
-
     }
+
+//    public ResponseEntity newPassword(NewPasswordDTO newPasswordDTO) {
+//        //get email by token
+//        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+//        //get user by email
+//        User user = repository.findByEmail(email);
+//        //check if user is null, return 404
+//        if (user == null) {
+//            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+//        }
+//        //check password
+//        Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id, 16, 16);
+//        boolean isPasswordCorrect = argon2.verify(user.getPassword(), newPasswordDTO.getPassword().toCharArray());
+//        //if password is correct, return 200
+//        if (isPasswordCorrect) {
+//            return new ResponseEntity<>(HttpStatus.OK);
+//        }
+//        //if password is incorrect, return 401
+//        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+//    }
 }
