@@ -51,6 +51,10 @@ public class EventController {
         this.eventCategoryOwnerRepository = eventCategoryOwnerRepository;
     }
 
+    //assign role จาก string ดิบๆ เก็บเป็น object-String เลย เพื่อความสะดวกในการเช็ค roles
+    private final String admin = "admin";
+    private final String lecturer = "lecturer";
+    private final String student = "student";
 
     // Get all-events
 // lecturer ดู events-lists  ของตัวเองเท่านั้น
@@ -84,10 +88,10 @@ public class EventController {
                     System.out.println("this is cliaims from jwtAzure(email) : " + msEmail);
                     System.out.println("this is cliaims from jwtAzure(name) : " + msName);
 
-                    if (msRole.contains("admin") || msRole.contains("student")) {
+                    if (msRole.contains(admin) || msRole.contains(student)) {
                         System.out.println("ms [admin] or [student] role : " + msRole);
                         return eventService.getAllEventByDTO();
-                    } else if (msRole.contains("lecturer")) {
+                    } else if (msRole.contains(lecturer)) {
                         System.out.println("ms [lecturer] role : " + msRole);
                         User user = userRepository.findByEmail(msEmail);
                         Integer lecId = user.getId();
@@ -110,12 +114,12 @@ public class EventController {
 //        ขั้นตอนนี้จะ
                 int lecId = user.getId();
 //
-                String email = SecurityContextHolder.getContext().getAuthentication().getName();
+//                String email = SecurityContextHolder.getContext().getAuthentication().getName();
                 String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
-                if (role.contains("lecturer")) {
+                if (role.contains(lecturer)) {
                     System.out.println("this user is [lecturer] : " + role);
                     return eventService.getEventsFromLecturerId(lecId);
-                } else if (role.contains("admin") || role.contains("student")) {
+                } else if (role.contains(admin) || role.contains(student)) {
                     System.out.println("this user is [admin] or [student] : " + role);
                     return eventService.getAllEventByDTO();
                 }
@@ -167,12 +171,12 @@ public class EventController {
                     String msRole = tokenDecoded.getClaims().get("roles").toString();
                     String msEmail = tokenDecoded.getClaims().get("preferred_username").toString();
 //admin-role
-                    if (msRole.contains("admin")) {
+                    if (msRole.contains(admin)) {
                         System.out.println("ms [admin] role : " + msRole);
                         return eventService.getSimpleEventById(bookingId);
                     }
 //student-role
-                    else if (msRole.contains("student")) {
+                    else if (msRole.contains(student)) {
                         List<Event> checkEventEmailMS = repository.getEventByBookingEmailAndBookingId(msEmail, bookingId);
 //student กรณีที่ email+bookingId ไม่พบ event ของตน แสดงว่า เป็น event ของคนอื่น ในเงื่อนไข isEmpty() นี้เราจะให้ "view-blinded-event"
 // (แต่่ถ้า query แล้วเจอ event ก็จะ return แบบ eventdetail ทั้งหมดตามปกติ)
@@ -186,7 +190,7 @@ public class EventController {
                         }
                     }
 //lecturer-role
-                    else if (msRole.contains("lecturer")) {
+                    else if (msRole.contains(lecturer)) {
                         System.out.println("ms [lecturer] role : " + msRole);
                         User lecUser = userRepository.findByEmail(msEmail);
                         Integer lecId = lecUser.getId();
@@ -212,9 +216,9 @@ public class EventController {
                 String lecEmail = SecurityContextHolder.getContext().getAuthentication().getName();
                 User lecUser = userRepository.findByEmail(lecEmail);
                 int lecId = lecUser.getId();
-                if (role.contains("admin")) {
+                if (role.contains(admin)) {
                     return eventService.getSimpleEventById(bookingId);
-                } else if (role.contains("student")) {
+                } else if (role.contains(student)) {
                     List<Event> checkEventEmail = repository.getEventByBookingEmailAndBookingId(email, bookingId);
                     if (checkEventEmail.isEmpty()) {
                         //blinded-event
@@ -224,7 +228,7 @@ public class EventController {
                         System.out.println("event of this student");
                         return eventService.getSimpleEventById(bookingId);
                     }
-                } else if (storedEventDetails.getBookingEmail().equals(email) || role.contains("lecturer")) {
+                } else if (storedEventDetails.getBookingEmail().equals(email) || role.contains(lecturer)) {
                     System.out.println("ผ่าน role: lecturer");
                     List isEmptyDetail = eventService.getDetailByLecturerIdAndBookingId(lecId, bookingId);
                     if (isEmptyDetail.isEmpty()) {
@@ -363,10 +367,14 @@ public class EventController {
 //token from azure
             if (tokenDecoded.getAlgorithm().contains("RS256")) {
                 System.out.println("this is token from azure");
+//lecturer cannot post-event
+                if (tokenDecoded.getClaims().get("roles").toString().contains(lecturer)) {
+                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Lecturer not have permission to add-event");
+                }
 //roles:null == student, role:student, role:admin
-                if (tokenDecoded.getClaims().get("roles") == null ||
-                        tokenDecoded.getClaims().get("roles").toString().contains("student") ||
-                        tokenDecoded.getClaims().get("roles").toString().contains("admin")) {
+                else if (tokenDecoded.getClaims().get("roles") == null ||
+                        tokenDecoded.getClaims().get("roles").toString().contains(student) ||
+                        tokenDecoded.getClaims().get("roles").toString().contains(admin)) {
 //check:exception starttime overlap
                     LocalDateTime newEventStartTime = newEvent.getEventStartTime();
                     List<Event> eventStartTime = repository.getAllEvents();
@@ -391,8 +399,6 @@ public class EventController {
 //เมื่อไม่เจอ error ก็จะ post ได้
                     System.out.println("post event success !!!");
                     return eventService.save(newEvent);
-                } else if (tokenDecoded.getClaims().get("roles").toString().contains("lecturer")) {
-                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
                 }
             }
 
@@ -423,11 +429,11 @@ public class EventController {
                     System.out.println("Booking Email must be filled out! === status 400");
                     throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED);
                 }
-                if (role.contains("lecturer")) {
+                if (role.contains(lecturer)) {
                     System.out.println("role: " + role);
-                    throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Lecturer not have permission to add-event");
                 }
-                if (role.contains("admin") || role.contains("student")) {
+                if (role.contains(admin) || role.contains(student)) {
                     System.out.println("email : " + email);
                     System.out.println("role: " + role);
                     System.out.println("post event success !!!");
@@ -446,47 +452,103 @@ public class EventController {
 
     //    update event
     @PutMapping("/{id}")
-    public Event updateEvent(@Valid @RequestBody EditEventDTO updateEvent, @PathVariable Integer id) {
-        //get email from token
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        //get role from token
-        String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
-
-//        User userEmail = userRepository.findByEmail(email);
-        Optional<Event> findEvent = repository.findById(id);
-        if (findEvent.isEmpty()) {
-            System.out.println("Event not found");
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "event not found");
+    public Event updateEvent(@Valid @RequestBody EditEventDTO updateEvent, @PathVariable Integer id, HttpServletRequest request) {
+        System.out.println("\n--------\nการทำงานของ edit-event \n--------");
+//guest (ไม่มี token) จะไม่ม่ีสิทธิ์ในการ edit-event ใดๆทั้งสิ้น
+        if (request.getHeader("Authorization") == null) {
+            System.out.println("this is [guest] user : guest cannot edit-event");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot edit-event");
         }
+//else-condition เมื่อพบ token
+        else {
+//กรองว่าเจอ event-booking ในการ edit ไหม หากไม่เจอ จะ throw 404 ทันที
+            Optional<Event> findEvent = repository.findById(id);
+            if (findEvent.isEmpty()) {
+                System.out.println("Event not found");
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "event not found");
+            }
+//ส่วนการทำงาน update-event (ไว้ตรงนี้ เพื่อให้การทำงานมีประสิทธิภาพ และเหมาะสมขึ้น ตาม flow ของ code)
+            Event storedEventDetails = repository.getById(id);
+            storedEventDetails.setId(updateEvent.getId());
+            storedEventDetails.setEventStartTime(updateEvent.getEventStartTime());
+            storedEventDetails.setEventNotes(updateEvent.getEventNotes());
+//decode token เพื่อเช็ค algorithm
+            final String authorizationHeader = request.getHeader("Authorization");
+            String token = authorizationHeader.substring(7);
+            DecodedJWT tokenDecoded = JWT.decode(token);
+            System.out.println(tokenDecoded.getAlgorithm());
+//token from azure
+            if (tokenDecoded.getAlgorithm().contains("RS256")) {
+                System.out.println("this is token from azure");
+//lecturer-role ไม่สามารถ edit-event
+                if (tokenDecoded.getClaims().get("roles").toString().contains(lecturer)) {
+                    System.out.println("lecturer not have permission to edit event.");
+                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Lecturer not have permission to edit event.");
+                }
+//admin-role
+                else if (tokenDecoded.getClaims().get("roles").toString().contains(admin)) {
+                    System.out.println("admin role");
+                    return repository.saveAndFlush(storedEventDetails);
+                }
+//student-role โดย default เมื่อ role == null จาก azure-token
+                else if (tokenDecoded.getClaims().get("roles") == null || tokenDecoded.getClaims().get("roles").toString().contains(student)) {
+                    System.out.println("student role");
+                    String msEmail = tokenDecoded.getClaims().get("preferred_username").toString();
+                    List<Event> checkEventEmailMS = repository.getEventByBookingEmailAndBookingId(msEmail, id);
+                    if (checkEventEmailMS.isEmpty()) {
+                        System.out.println("Student not have permission to edit this event.");
+                        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This Student not have permission to edit this event.");
+                    } else {
+                        return repository.saveAndFlush(storedEventDetails);
+                    }
+                }
+            }
 
-        Event storedEventDetails = repository.getById(id);
-        storedEventDetails.setId(updateEvent.getId());
-        storedEventDetails.setEventStartTime(updateEvent.getEventStartTime());
-        storedEventDetails.setEventNotes(updateEvent.getEventNotes());
-        //if user email is equal to event email or role is admin then can update
-        if (storedEventDetails.getBookingEmail().equals(email) || role.contains("admin")) {
-            return repository.saveAndFlush(storedEventDetails);
-        } else {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+//token from oasip
+            else {
+                System.out.println("token from oasip");
+                //get email from token
+                String email = SecurityContextHolder.getContext().getAuthentication().getName();
+                //get role from token
+                String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
+
+                //if user email is equal to event email or role is admin then can update
+                if (role.contains(lecturer)) {
+                    System.out.println("lecturer not have permission to edit event.");
+                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Lecturer not have permission to edit event.");
+                } else if (role.contains(admin)) {
+                    System.out.println("admin role");
+                    return repository.saveAndFlush(storedEventDetails);
+                } else if (role.contains(student)) {
+                    System.out.println("student role");
+                    List<Event> checkEvent = repository.getEventByBookingEmailAndBookingId(email, id);
+                    if (checkEvent.isEmpty()) {
+                        System.out.println("This student not have permission to edit this event.");
+                        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This Student not have permission to edit this event.");
+                    } else {
+                        return repository.saveAndFlush(storedEventDetails);
+                    }
+                }
+            }
         }
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "something went wrong");
     }
 
     //   delete event
     @DeleteMapping("/{bookingId}")
     public void delete(@PathVariable Integer bookingId, HttpServletRequest request) {
         System.out.println("\n--------\nการทำงานของ delete-event \n--------");
-//กรองก่อนเลย ว่าเจอ event-booking ในการ delete ไหม
+//กรองก่อนเลย ว่าเป็น guest (ไม่มี token) ไหม (เพราะ guest ไม่มีสิทธิ์ในการเข้าถึง feature นี้)
+        if (request.getHeader("Authorization") == null) {
+            System.out.println("this is [guest] user : guest cannot delete-event");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot delete-event");
+        }
+// เจอ event-booking ในการ delete ไหม
         Optional<Event> findEvent = repository.findById(bookingId);
         if (findEvent.isEmpty()) {
             System.out.println("Event not found");
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "event not found");
         }
-//guest (ไม่มี token)
-        if (request.getHeader("Authorization") == null) {
-            System.out.println("this is [guest] user : guest cannot delete-event");
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot delete-event");
-        }
-
 //else-condition เมื่อพบ token
         else {
 //decode token เพื่อเช็ค algorithm
@@ -498,7 +560,7 @@ public class EventController {
             if (tokenDecoded.getAlgorithm().contains("RS256")) {
                 System.out.println("this is token from azure");
 //default role is "student" & student role (ทำงานในนี้เกี่ยวกับ student role เลย
-                if (tokenDecoded.getClaims().get("roles") == null || tokenDecoded.getClaims().get("roles").toString().contains("student")) {
+                if (tokenDecoded.getClaims().get("roles") == null || tokenDecoded.getClaims().get("roles").toString().contains(student)) {
                     System.out.println("default role is [student] role");
                     String msEmail = tokenDecoded.getClaims().get("preferred_username").toString();
                     List<Event> checkEventEmailMS = repository.getEventByBookingEmailAndBookingId(msEmail, bookingId);
@@ -513,12 +575,12 @@ public class EventController {
                 else if (tokenDecoded.getClaims().get("roles") != null) {
                     String msRole = tokenDecoded.getClaims().get("roles").toString();
 //admin-role
-                    if (msRole.contains("admin")) {
+                    if (msRole.contains(admin)) {
                         System.out.println("ms [admin] role : " + msRole);
                         repository.deleteById(bookingId);
                     }
 //lecturer-role
-                    else if (msRole.contains("lecturer")) {
+                    else if (msRole.contains(lecturer)) {
                         System.out.println("lec cannot delete event");
                         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "lecturer cannot delete-event");
                     }
@@ -534,7 +596,7 @@ public class EventController {
                 User userEmail = userRepository.findByEmail(email);
 
                 Event storedEventDetails = repository.getById(bookingId);
-                if (storedEventDetails.getBookingEmail().equals(email) || role.contains("admin")) {
+                if (storedEventDetails.getBookingEmail().equals(email) || role.contains(admin)) {
 //            return repository.saveAndFlush(storedEventDetails);
                     repository.findById(bookingId).orElseThrow(() ->
                             new ResponseStatusException(HttpStatus.NOT_FOUND, bookingId + " does not exist !"));
@@ -544,6 +606,7 @@ public class EventController {
                 }
             }
         }
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "something went wrong");
     }
 
 
