@@ -91,6 +91,12 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.GET,"/api/events").permitAll()
                 .antMatchers(HttpMethod.GET,"/api/events/{bookingId}").permitAll()
                 .antMatchers(HttpMethod.DELETE,"/api/events/{bookingId}").permitAll()
+                .antMatchers(HttpMethod.POST,"/api/files/upload").permitAll()
+                .antMatchers(HttpMethod.GET,"/api/files/**").permitAll()
+                .antMatchers(HttpMethod.GET,"/api/files/download/**").permitAll()
+                .antMatchers(HttpMethod.PATCH,"/api/files/update/**").permitAll()
+                .antMatchers(HttpMethod.PATCH,"/api/files/delete/**").permitAll()
+
 
 
 
