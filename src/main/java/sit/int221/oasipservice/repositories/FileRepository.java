@@ -36,5 +36,13 @@ public interface FileRepository extends JpaRepository<File, String> {
                     "where u.email = :ue and f.event_bookingId= :fileEventId", nativeQuery = true
     )
     List<File> getDataByEmailAndBookingIdWithFile(@Param("ue") String userEmail, @Param("fileEventId") Integer fileEventId);
+
+    //    get data from relation of usre,event,file
+    @Query(
+            value = "select * from file f join event e on e.bookingId = f.event_bookingId" +
+                    "join user u on u.email = e.bookingEmail" +
+                    "where u.email = :ue and f.fileId= :fileId", nativeQuery = true
+    )
+    List<File> getDataByEmailAndFileId(@Param("ue") String userEmail, @Param("fileId") String fileId);
 }
 
