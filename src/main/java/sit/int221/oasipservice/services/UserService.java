@@ -227,15 +227,17 @@ public class UserService implements UserDetailsService {
         boolean isPasswordCorrect = argon2.verify(user.getPassword(), changeDTO.getPassword().toCharArray());
         //if password is correct then change password
         if (isPasswordCorrect) {
+            System.out.println(isPasswordCorrect);
             if (changeDTO.getNewPassword().length() < 8 || changeDTO.getNewPassword().length() > 14) {
                 System.out.println("invalid number of password : " + changeDTO.getNewPassword().length());
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The password must be between 8 and 14 characters long");
             }
 //            Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id, 16, 16);
             String hash = argon2.hash(2, 16, 1, changeDTO.getNewPassword());
-            changeDTO.setPassword(hash);
-            changeDTO.setPassword(changeDTO.getNewPassword());
-            throw new ResponseStatusException(HttpStatus.OK, "Password changed");
+            changeDTO.setNewPassword(hash);
+            changeDTO.setNewPassword(changeDTO.getNewPassword());
+            user.setPassword(changeDTO.getNewPassword());
+            return repository.saveAndFlush(user);
         }
         //if password is incorrect, return 401
         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Password incorrect");
