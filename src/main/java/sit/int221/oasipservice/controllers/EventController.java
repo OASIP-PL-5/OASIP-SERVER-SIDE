@@ -77,8 +77,7 @@ public class EventController {
             if (tokenDecoded.getAlgorithm().contains("RS256")) {
                 System.out.println("this is token from azure");
                 if (tokenDecoded.getClaims().get("roles") == null) {
-                    System.out.println("หากไม่มี role ใน token-claims จะเข้าเงื่อนไขนี้");
-                    System.out.println("เมื่อเข้าเงื่อนไขนี้สำเร็จ ให้นับว่าเป็น student");
+                    System.out.println("หากไม่มี role ใน token-claims == guest");
                     return eventService.getAllEventByDTO();
                 } else if (tokenDecoded.getClaims().get("roles") != null) {
                     String msRole = tokenDecoded.getClaims().get("roles").toString();
@@ -152,19 +151,10 @@ public class EventController {
 //token from azure
             if (tokenDecoded.getAlgorithm().contains("RS256")) {
                 System.out.println("this is token from azure");
-//student-role (เช็คก่อนว่า role ใน token-azure มีไหม ถ้าไม่มี == null จึงเข้าเงื่อนไขนี้)
+//role == null == guest-user
                 if (tokenDecoded.getClaims().get("roles") == null) {
-                    System.out.println("not have role in token(decoded) == [student] role (default role)");
-                    String msEmail = tokenDecoded.getClaims().get("preferred_username").toString();
-                    List<Event> checkEventEmailMS = repository.getEventByBookingEmailAndBookingId(msEmail, bookingId);
-                    if (checkEventEmailMS.isEmpty()) {
-                        //blinded-event
-                        System.out.println("view blind event success ?");
-                        return eventService.getBlindEventById(bookingId);
-                    } else {
-                        System.out.println("event of this student");
-                        return eventService.getSimpleEventById(bookingId);
-                    }
+                    System.out.println("this is [guest] user : guest can view blinded-event");
+                    return eventService.getBlindEventById(bookingId);
                 }
 //role ใน token != null ก็คือพบ role จากการ decode azure-token ดังกล่าว
                 else if (tokenDecoded.getClaims().get("roles") != null) {
@@ -367,13 +357,17 @@ public class EventController {
 //token from azure
             if (tokenDecoded.getAlgorithm().contains("RS256")) {
                 System.out.println("this is token from azure");
+//guest เมื่อ ไม่พบ role ใน token
+                if (tokenDecoded.getClaims().get("roles") == null) {
+                    System.out.println("this is [guest] user : guest cannot add-event");
+                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot post-event");
+                }
 //lecturer cannot post-event
-                if (tokenDecoded.getClaims().get("roles").toString().contains(lecturer)) {
+                else if (tokenDecoded.getClaims().get("roles").toString().contains(lecturer)) {
                     throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Lecturer not have permission to add-event");
                 }
-//roles:null == student, role:student, role:admin
-                else if (tokenDecoded.getClaims().get("roles") == null ||
-                        tokenDecoded.getClaims().get("roles").toString().contains(student) ||
+// role:student, role:admin
+                else if (tokenDecoded.getClaims().get("roles").toString().contains(student) ||
                         tokenDecoded.getClaims().get("roles").toString().contains(admin)) {
 //check:exception starttime overlap
                     LocalDateTime newEventStartTime = newEvent.getEventStartTime();
@@ -480,8 +474,13 @@ public class EventController {
 //token from azure
             if (tokenDecoded.getAlgorithm().contains("RS256")) {
                 System.out.println("this is token from azure");
+//guest เมื่อ ไม่พบ role ใน token
+                if(tokenDecoded.getClaims().get("roles") == null){
+                    System.out.println("this is [guest] user : guest cannot edit-event");
+                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot edit-event");
+                }
 //lecturer-role ไม่สามารถ edit-event
-                if (tokenDecoded.getClaims().get("roles").toString().contains(lecturer)) {
+                else if (tokenDecoded.getClaims().get("roles").toString().contains(lecturer)) {
                     System.out.println("lecturer not have permission to edit event.");
                     throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Lecturer not have permission to edit event.");
                 }
@@ -491,7 +490,7 @@ public class EventController {
                     return repository.saveAndFlush(storedEventDetails);
                 }
 //student-role โดย default เมื่อ role == null จาก azure-token
-                else if (tokenDecoded.getClaims().get("roles") == null || tokenDecoded.getClaims().get("roles").toString().contains(student)) {
+                else if (tokenDecoded.getClaims().get("roles").toString().contains(student)) {
                     System.out.println("student role");
                     String msEmail = tokenDecoded.getClaims().get("preferred_username").toString();
                     List<Event> checkEventEmailMS = repository.getEventByBookingEmailAndBookingId(msEmail, id);
@@ -559,8 +558,13 @@ public class EventController {
 //token from azure
             if (tokenDecoded.getAlgorithm().contains("RS256")) {
                 System.out.println("this is token from azure");
-//default role is "student" & student role (ทำงานในนี้เกี่ยวกับ student role เลย
-                if (tokenDecoded.getClaims().get("roles") == null || tokenDecoded.getClaims().get("roles").toString().contains(student)) {
+//guest เมื่อไม่พบ role ใน token
+                if (tokenDecoded.getClaims().get("roles") == null){
+                    System.out.println("this is [guest] user : guest cannot delete-event");
+                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot delete-event");
+                }
+//student role (ทำงานในนี้เกี่ยวกับ student role เลย
+                else if (tokenDecoded.getClaims().get("roles").toString().contains(student)) {
                     System.out.println("default role is [student] role");
                     String msEmail = tokenDecoded.getClaims().get("preferred_username").toString();
                     List<Event> checkEventEmailMS = repository.getEventByBookingEmailAndBookingId(msEmail, bookingId);
