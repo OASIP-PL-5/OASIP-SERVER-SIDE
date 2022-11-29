@@ -124,12 +124,10 @@ public class UserController {
 //        return userService.checkLogin(matchPasswordDTO);
 //    }
 
-    //use post to send email to change password
-    @PostMapping("/forgot-password")
-    public ResponseEntity forgotPassword(@Valid @RequestBody SendMailDTO email) {
-        System.out.println(email);
-        userService.sendMail(email);
-        return ResponseEntity.ok().build();
+    @PutMapping("/change-password")
+    public User forgotPassword(@Valid @RequestBody ChangeDTO changeDTO) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userService.changePassword(email,changeDTO);
     }
     @PutMapping("/forgot")
     public User forgot(@Valid @RequestBody NewPasswordDTO newPasswordDTO) {

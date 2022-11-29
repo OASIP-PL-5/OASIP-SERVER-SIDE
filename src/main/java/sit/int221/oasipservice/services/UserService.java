@@ -18,10 +18,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 //import sit.int221.oasipservice.dtos.NewUserDTO;
 import org.springframework.web.server.ResponseStatusException;
-import sit.int221.oasipservice.dtos.MatchPasswordDTO;
-import sit.int221.oasipservice.dtos.NewPasswordDTO;
-import sit.int221.oasipservice.dtos.SendMailDTO;
-import sit.int221.oasipservice.dtos.UserDTO;
+import sit.int221.oasipservice.dtos.*;
 import sit.int221.oasipservice.entities.User;
 import sit.int221.oasipservice.repositories.UserRepository;
 import sit.int221.oasipservice.utils.JwtUtility;
@@ -211,5 +208,36 @@ public class UserService implements UserDetailsService {
         newPasswordDTO.setPassword(hash);
         updateUserDetails.setPassword(newPasswordDTO.getPassword());
         return repository.saveAndFlush(updateUserDetails);
+    }
+
+
+
+
+    public User changePassword(String email ,ChangeDTO changeDTO) {
+        System.out.println("changeDTO: " + changeDTO.getPassword());
+        System.out.println("changeDTO: " + changeDTO.getNewPassword());
+        //get user by email
+        User user = repository.findByEmail(email);
+        //check if user is null, return 404
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        }
+        //check password
+        Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id, 16, 16);
+        boolean isPasswordCorrect = argon2.verify(user.getPassword(), changeDTO.getPassword().toCharArray());
+        //if password is correct then change password
+        if (isPasswordCorrect) {
+            if (changeDTO.getNewPassword().length() < 8 || changeDTO.getNewPassword().length() > 14) {
+                System.out.println("invalid number of password : " + changeDTO.getNewPassword().length());
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The password must be between 8 and 14 characters long");
+            }
+//            Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id, 16, 16);
+            String hash = argon2.hash(2, 16, 1, changeDTO.getNewPassword());
+            changeDTO.setPassword(hash);
+            changeDTO.setPassword(changeDTO.getNewPassword());
+            throw new ResponseStatusException(HttpStatus.OK, "Password changed");
+        }
+        //if password is incorrect, return 401
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Password incorrect");
     }
 }
