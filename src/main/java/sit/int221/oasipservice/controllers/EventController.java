@@ -357,13 +357,13 @@ public class EventController {
 
 //else:condition ตัวนี้สำหรับทำงานกรณีมี token
         else {
-            LocalDateTime newEventStartTime = newEvent.getEventStartTime();
 //decode token เพื่อเช็ค algorithm
             final String authorizationHeader = request.getHeader("Authorization");
             String token = authorizationHeader.substring(7);
             DecodedJWT tokenDecoded = JWT.decode(token);
             System.out.println(tokenDecoded.getAlgorithm());
-            List<Event> checkEventEndTime = repository.getAllEvents();
+            LocalDateTime newEventStartTime = newEvent.getEventStartTime();
+            List<Event> checkEventEndTime = repository.getAllEventsByEventCategory(newEvent.getEventCategoryName());
 //token from azure
             if (tokenDecoded.getAlgorithm().contains("RS256")) {
                 System.out.println("this is token from azure");

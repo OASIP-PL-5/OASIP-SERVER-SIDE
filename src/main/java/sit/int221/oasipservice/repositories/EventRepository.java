@@ -135,4 +135,9 @@ public interface EventRepository extends JpaRepository<Event, Integer>, JpaSpeci
     )
     List<Event> checkEventEndTime();
 
+    //    get all event by event-category
+    @Query(
+            value = "SELECT * FROM event e  where e.eventCategory = :ec ORDER BY e.eventStartTime DESC", nativeQuery = true
+    )
+    List<Event> getAllEventsByEventCategory(@Param("ec") String eventCategory);
 }
