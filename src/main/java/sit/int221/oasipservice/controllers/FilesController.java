@@ -251,7 +251,7 @@ public class FilesController {
                 }
             }
         }
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "something went wrong");
+//        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "something went wrong");
     }
 
 //---------------------------------------------------------------
@@ -322,7 +322,6 @@ public class FilesController {
                 }
             }
         }
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "something went wrong");
     }
 
 

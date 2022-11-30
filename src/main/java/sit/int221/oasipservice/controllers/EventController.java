@@ -2,7 +2,9 @@ package sit.int221.oasipservice.controllers;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import org.apache.tomcat.jni.Local;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +21,10 @@ import sit.int221.oasipservice.services.EventService;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
 
@@ -342,18 +348,22 @@ public class EventController {
     @ResponseStatus(HttpStatus.CREATED)
     public Event create(@Valid @RequestBody NewEventDTO newEvent, HttpServletRequest request) {
         System.out.println("\n--------\nการทำงานของ add event\n--------");
+
 //guest (ไม่มี token)
         if (request.getHeader("Authorization") == null) {
             System.out.println("this is [guest] user : guest cannot add-event");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot post-event");
         }
+
 //else:condition ตัวนี้สำหรับทำงานกรณีมี token
         else {
+            LocalDateTime newEventStartTime = newEvent.getEventStartTime();
 //decode token เพื่อเช็ค algorithm
             final String authorizationHeader = request.getHeader("Authorization");
             String token = authorizationHeader.substring(7);
             DecodedJWT tokenDecoded = JWT.decode(token);
             System.out.println(tokenDecoded.getAlgorithm());
+            List<Event> checkEventEndTime = repository.getAllEvents();
 //token from azure
             if (tokenDecoded.getAlgorithm().contains("RS256")) {
                 System.out.println("this is token from azure");
@@ -370,12 +380,15 @@ public class EventController {
                 else if (tokenDecoded.getClaims().get("roles").toString().contains(student) ||
                         tokenDecoded.getClaims().get("roles").toString().contains(admin)) {
 //check:exception starttime overlap
-                    LocalDateTime newEventStartTime = newEvent.getEventStartTime();
-                    List<Event> eventStartTime = repository.getAllEvents();
-                    for (int i = 0; i < eventStartTime.size(); i++) {
-                        System.out.println(eventStartTime.get(i).getEventStartTime());
-                        System.out.println(eventStartTime.get(i).getEventStartTime().isEqual(newEventStartTime));
-                        if (eventStartTime.get(i).getEventStartTime().isEqual(newEventStartTime)) {
+                    for (int i = 0; i < checkEventEndTime.size(); i++){
+                        LocalDateTime eventStartTime = checkEventEndTime.get(i).getEventStartTime();
+                        Integer eventDuration = checkEventEndTime.get(i).getEventDuration();
+                        System.out.println("eventStartTime: "+eventStartTime);
+                        System.out.println("eventDuration: "+eventDuration);
+                        LocalDateTime endTime = eventStartTime.plusMinutes(eventDuration);
+                        System.out.println("eventEndTime: "+endTime);
+                        System.out.println("--------------------");
+                        if (eventStartTime.isEqual(newEventStartTime)){
                             System.out.println("overlap condition");
                             throw new ResponseStatusException(HttpStatus.CONFLICT);
                         }
@@ -401,15 +414,25 @@ public class EventController {
                 String email = SecurityContextHolder.getContext().getAuthentication().getName();
                 String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
 //check:exception starttime overlap
-                LocalDateTime newEventStartTime = newEvent.getEventStartTime();
-                List<Event> eventStartTime = repository.getAllEvents();
                 System.out.println("before condition post [email] : " + email);
                 System.out.println("before condition post [role] : " + role);
-                for (int i = 0; i < eventStartTime.size(); i++) {
-                    System.out.println(eventStartTime.get(i).getEventStartTime());
-                    System.out.println(eventStartTime.get(i).getEventStartTime().isEqual(newEventStartTime));
-                    if (eventStartTime.get(i).getEventStartTime().isEqual(newEventStartTime)) {
+                for (int i = 0; i < checkEventEndTime.size(); i++){
+                    LocalDateTime eventStartTime = checkEventEndTime.get(i).getEventStartTime();
+                    Integer eventDuration = checkEventEndTime.get(i).getEventDuration();
+                    System.out.println("--------------------");
+                    System.out.println("eventStartTime: "+eventStartTime);
+                    System.out.println("eventDuration: "+eventDuration);
+                    LocalDateTime endTime = eventStartTime.plusMinutes(eventDuration);
+                    System.out.println("eventEndTime: "+endTime);
+                    System.out.println("--------------------");
+                    if ((!(newEventStartTime.isBefore(eventStartTime)) && newEventStartTime.isBefore(endTime)) || newEventStartTime.isEqual(endTime)){
+                        System.out.println(!newEventStartTime.isBefore(eventStartTime));
+                        System.out.println(newEventStartTime.isBefore(endTime));
+                        System.out.println(newEventStartTime.isEqual(endTime));
                         System.out.println("overlap condition");
+                        System.out.println("eventStartTime: "+eventStartTime);
+                        System.out.println("endtime: "+endTime);
+                        System.out.println("newEventStartTime: "+newEventStartTime);
                         throw new ResponseStatusException(HttpStatus.CONFLICT);
                     }
                 }
@@ -610,7 +633,6 @@ public class EventController {
                 }
             }
         }
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "something went wrong");
     }
 
 
