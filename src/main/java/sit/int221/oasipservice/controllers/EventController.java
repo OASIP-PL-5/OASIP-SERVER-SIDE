@@ -364,6 +364,38 @@ public class EventController {
             System.out.println(tokenDecoded.getAlgorithm());
             LocalDateTime newEventStartTime = newEvent.getEventStartTime();
             List<Event> checkEventEndTime = repository.getAllEventsByEventCategory(newEvent.getEventCategoryName());
+
+//check:exception bookingname length is 0
+            if (newEvent.getBookingName().length() == 0) {
+                System.out.println("Booking Name must be filled out! === status 417");
+                throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED);
+            }
+//check:exception bookingemail length is 0
+            if (newEvent.getBookingEmail().length() == 0) {
+                System.out.println("Booking Email must be filled out! === status 400");
+                throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED);
+            }
+//check: overlap
+            for (int i = 0; i < checkEventEndTime.size(); i++){
+                LocalDateTime eventStartTime = checkEventEndTime.get(i).getEventStartTime();
+                Integer eventDuration = checkEventEndTime.get(i).getEventDuration();
+                System.out.println("--------------------");
+                System.out.println("eventStartTime: "+eventStartTime);
+                System.out.println("eventDuration: "+eventDuration);
+                LocalDateTime endTime = eventStartTime.plusMinutes(eventDuration);
+                System.out.println("eventEndTime: "+endTime);
+                System.out.println("--------------------");
+                if ((!(newEventStartTime.isBefore(eventStartTime)) && newEventStartTime.isBefore(endTime)) || newEventStartTime.isEqual(endTime)){
+                    System.out.println(!newEventStartTime.isBefore(eventStartTime));
+                    System.out.println(newEventStartTime.isBefore(endTime));
+                    System.out.println(newEventStartTime.isEqual(endTime));
+                    System.out.println("overlap condition");
+                    System.out.println("eventStartTime: "+eventStartTime);
+                    System.out.println("endtime: "+endTime);
+                    System.out.println("newEventStartTime: "+newEventStartTime);
+                    throw new ResponseStatusException(HttpStatus.CONFLICT,"overlap founded : "+endTime);
+                }
+            }
 //token from azure
             if (tokenDecoded.getAlgorithm().contains("RS256")) {
                 System.out.println("this is token from azure");
@@ -379,30 +411,7 @@ public class EventController {
 // role:student, role:admin
                 else if (tokenDecoded.getClaims().get("roles").toString().contains(student) ||
                         tokenDecoded.getClaims().get("roles").toString().contains(admin)) {
-//check:exception starttime overlap
-                    for (int i = 0; i < checkEventEndTime.size(); i++){
-                        LocalDateTime eventStartTime = checkEventEndTime.get(i).getEventStartTime();
-                        Integer eventDuration = checkEventEndTime.get(i).getEventDuration();
-                        System.out.println("eventStartTime: "+eventStartTime);
-                        System.out.println("eventDuration: "+eventDuration);
-                        LocalDateTime endTime = eventStartTime.plusMinutes(eventDuration);
-                        System.out.println("eventEndTime: "+endTime);
-                        System.out.println("--------------------");
-                        if (eventStartTime.isEqual(newEventStartTime)){
-                            System.out.println("overlap condition");
-                            throw new ResponseStatusException(HttpStatus.CONFLICT);
-                        }
-                    }
-//check:exception bookingname length is 0
-                    if (newEvent.getBookingName().length() == 0) {
-                        System.out.println("Booking Name must be filled out! === status 417");
-                        throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED);
-                    }
-//check:exception bookingemail length is 0
-                    if (newEvent.getBookingEmail().length() == 0) {
-                        System.out.println("Booking Email must be filled out! === status 400");
-                        throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED);
-                    }
+
 //เมื่อไม่เจอ error ก็จะ post ได้
                     System.out.println("post event success !!!");
                     return eventService.save(newEvent);
@@ -416,36 +425,8 @@ public class EventController {
 //check:exception starttime overlap
                 System.out.println("before condition post [email] : " + email);
                 System.out.println("before condition post [role] : " + role);
-                for (int i = 0; i < checkEventEndTime.size(); i++){
-                    LocalDateTime eventStartTime = checkEventEndTime.get(i).getEventStartTime();
-                    Integer eventDuration = checkEventEndTime.get(i).getEventDuration();
-                    System.out.println("--------------------");
-                    System.out.println("eventStartTime: "+eventStartTime);
-                    System.out.println("eventDuration: "+eventDuration);
-                    LocalDateTime endTime = eventStartTime.plusMinutes(eventDuration);
-                    System.out.println("eventEndTime: "+endTime);
-                    System.out.println("--------------------");
-                    if ((!(newEventStartTime.isBefore(eventStartTime)) && newEventStartTime.isBefore(endTime)) || newEventStartTime.isEqual(endTime)){
-                        System.out.println(!newEventStartTime.isBefore(eventStartTime));
-                        System.out.println(newEventStartTime.isBefore(endTime));
-                        System.out.println(newEventStartTime.isEqual(endTime));
-                        System.out.println("overlap condition");
-                        System.out.println("eventStartTime: "+eventStartTime);
-                        System.out.println("endtime: "+endTime);
-                        System.out.println("newEventStartTime: "+newEventStartTime);
-                        throw new ResponseStatusException(HttpStatus.CONFLICT);
-                    }
-                }
-//check:exception bookingname length is 0
-                if (newEvent.getBookingName().length() == 0) {
-                    System.out.println("Booking Name must be filled out! === status 417");
-                    throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED);
-                }
-//check:exception bookingemail length is 0
-                if (newEvent.getBookingEmail().length() == 0) {
-                    System.out.println("Booking Email must be filled out! === status 400");
-                    throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED);
-                }
+
+
                 if (role.contains(lecturer)) {
                     System.out.println("role: " + role);
                     throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Lecturer not have permission to add-event");
