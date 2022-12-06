@@ -25,6 +25,8 @@ public class ApplicationConfig {
         return ListMapper.getInstance();
     }
 
+
+
     @Bean
     public Argon2 argon2() {
         return new Argon2() {

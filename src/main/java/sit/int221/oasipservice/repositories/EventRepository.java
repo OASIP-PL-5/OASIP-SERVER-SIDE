@@ -122,4 +122,22 @@ public interface EventRepository extends JpaRepository<Event, Integer>, JpaSpeci
 //    )
 //    List<Event> findEventWithFileByEventId(@Param("e") Integer bookingId);
 
+    //check event by email
+    @Query(
+            value = "select * from event  where bookingEmail = :e and bookingId = :i", nativeQuery = true
+    )
+    List<Event> getEventByBookingEmailAndBookingId(@Param("e") String bookingEmail, @Param("i") Integer bookingId);
+
+    //non-overlap-check
+    @Query(
+            value = "select bookingId,bookingName,bookingEmail,eventCategoryId,eventCategory,eventStartTime,eventDuration," +
+                    "DATE_ADD(eventStartTime, INTERVAL eventDuration minute )as 'eventEndTime', eventNotes from event;", nativeQuery = true
+    )
+    List<Event> checkEventEndTime();
+
+    //    get all event by event-category
+    @Query(
+            value = "SELECT * FROM event e  where e.eventCategory = :ec ORDER BY e.eventStartTime DESC", nativeQuery = true
+    )
+    List<Event> getAllEventsByEventCategory(@Param("ec") String eventCategory);
 }
