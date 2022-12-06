@@ -20,6 +20,8 @@ import sit.int221.oasipservice.services.EventService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -98,8 +100,14 @@ public class EventController {
                         return eventService.getAllEventByDTO();
                     } else if (msRole.contains(lecturer)) {
                         System.out.println("ms [lecturer] role : " + msRole);
-                        User user = userRepository.findByEmail(msEmail);
+                        User user = userRepository.findByEmail(msEmail.replaceAll("^\"|\"$", ""));
+                        if (user == null){
+                            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "This lecturer email not found in oasip system. ");
+                        }
+                        System.out.println("user : " + user);
+
                         Integer lecId = user.getId();
+                        System.out.println("this is lecturer id : " + lecId);
                         return eventService.getEventsFromLecturerId(lecId);
                     }
                 }
@@ -364,38 +372,6 @@ public class EventController {
             System.out.println(tokenDecoded.getAlgorithm());
             LocalDateTime newEventStartTime = newEvent.getEventStartTime();
             List<Event> checkEventEndTime = repository.getAllEventsByEventCategory(newEvent.getEventCategoryName());
-
-//check:exception bookingname length is 0
-            if (newEvent.getBookingName().length() == 0) {
-                System.out.println("Booking Name must be filled out! === status 417");
-                throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED);
-            }
-//check:exception bookingemail length is 0
-            if (newEvent.getBookingEmail().length() == 0) {
-                System.out.println("Booking Email must be filled out! === status 400");
-                throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED);
-            }
-//check: overlap
-            for (int i = 0; i < checkEventEndTime.size(); i++){
-                LocalDateTime eventStartTime = checkEventEndTime.get(i).getEventStartTime();
-                Integer eventDuration = checkEventEndTime.get(i).getEventDuration();
-                System.out.println("--------------------");
-                System.out.println("eventStartTime: "+eventStartTime);
-                System.out.println("eventDuration: "+eventDuration);
-                LocalDateTime endTime = eventStartTime.plusMinutes(eventDuration);
-                System.out.println("eventEndTime: "+endTime);
-                System.out.println("--------------------");
-                if ((!(newEventStartTime.isBefore(eventStartTime)) && newEventStartTime.isBefore(endTime)) || newEventStartTime.isEqual(endTime)){
-                    System.out.println(!newEventStartTime.isBefore(eventStartTime));
-                    System.out.println(newEventStartTime.isBefore(endTime));
-                    System.out.println(newEventStartTime.isEqual(endTime));
-                    System.out.println("overlap condition");
-                    System.out.println("eventStartTime: "+eventStartTime);
-                    System.out.println("endtime: "+endTime);
-                    System.out.println("newEventStartTime: "+newEventStartTime);
-                    throw new ResponseStatusException(HttpStatus.CONFLICT,"overlap founded : "+endTime);
-                }
-            }
 //token from azure
             if (tokenDecoded.getAlgorithm().contains("RS256")) {
                 System.out.println("this is token from azure");
@@ -411,7 +387,30 @@ public class EventController {
 // role:student, role:admin
                 else if (tokenDecoded.getClaims().get("roles").toString().contains(student) ||
                         tokenDecoded.getClaims().get("roles").toString().contains(admin)) {
-
+//check:exception starttime overlap
+                    for (int i = 0; i < checkEventEndTime.size(); i++) {
+                        LocalDateTime eventStartTime = checkEventEndTime.get(i).getEventStartTime();
+                        Integer eventDuration = checkEventEndTime.get(i).getEventDuration();
+                        System.out.println("eventStartTime: " + eventStartTime);
+                        System.out.println("eventDuration: " + eventDuration);
+                        LocalDateTime endTime = eventStartTime.plusMinutes(eventDuration);
+                        System.out.println("eventEndTime: " + endTime);
+                        System.out.println("--------------------");
+                        if (eventStartTime.isEqual(newEventStartTime)) {
+                            System.out.println("overlap condition");
+                            throw new ResponseStatusException(HttpStatus.CONFLICT);
+                        }
+                    }
+//check:exception bookingname length is 0
+                    if (newEvent.getBookingName().length() == 0) {
+                        System.out.println("Booking Name must be filled out! === status 417");
+                        throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED);
+                    }
+//check:exception bookingemail length is 0
+                    if (newEvent.getBookingEmail().length() == 0) {
+                        System.out.println("Booking Email must be filled out! === status 400");
+                        throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED);
+                    }
 //เมื่อไม่เจอ error ก็จะ post ได้
                     System.out.println("post event success !!!");
                     return eventService.save(newEvent);
@@ -422,11 +421,48 @@ public class EventController {
             else {
                 String email = SecurityContextHolder.getContext().getAuthentication().getName();
                 String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
-//check:exception starttime overlap
+//check:past-event-starttime
+                if (newEvent.getEventStartTime().isBefore(java.time.LocalDateTime.now())) {
+                    System.out.println("check past-event");
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+                }
+                //check:exception starttime overlap
                 System.out.println("before condition post [email] : " + email);
                 System.out.println("before condition post [role] : " + role);
+                for (int i = 0; i < checkEventEndTime.size(); i++) {
+                    LocalDateTime eventStartTime = checkEventEndTime.get(i).getEventStartTime();
+                    Integer eventDuration = checkEventEndTime.get(i).getEventDuration();
+                    System.out.println("--------------------");
+                    System.out.println("eventStartTime: " + eventStartTime);
+                    System.out.println("eventDuration: " + eventDuration);
+                    LocalDateTime endTime = eventStartTime.plusMinutes(eventDuration);
+                    System.out.println("eventEndTime: " + endTime);
+                    System.out.println("--------------------");
+                    if ((!(newEventStartTime.isBefore(eventStartTime)) && newEventStartTime.isBefore(endTime)) || newEventStartTime.isEqual(endTime)) {
+                        System.out.println(!newEventStartTime.isBefore(eventStartTime));
+                        System.out.println(newEventStartTime.isBefore(endTime));
+                        System.out.println(newEventStartTime.isEqual(endTime));
+                        System.out.println("overlap condition");
+                        System.out.println("eventStartTime: " + eventStartTime);
+                        System.out.println("endtime: " + endTime);
+                        System.out.println("newEventStartTime: " + newEventStartTime);
 
-
+                        throw new ResponseStatusException(HttpStatus.CONFLICT, "Previous booking end-time is "
+                                + endTime.toLocalDate() + ' ' + endTime.toLocalTime().format(DateTimeFormatter.ofPattern("hh:mm a")) + '\n'
+                                + "Please try again at " + endTime.plusMinutes(1).toLocalTime().format(DateTimeFormatter.ofPattern("hh:mm a"))
+                                + " or later");
+                    }
+                }
+//check:exception bookingname length is 0
+                if (newEvent.getBookingName().length() == 0) {
+                    System.out.println("Booking Name must be filled out! === status 417");
+                    throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED);
+                }
+//check:exception bookingemail length is 0
+                if (newEvent.getBookingEmail().length() == 0) {
+                    System.out.println("Booking Email must be filled out! === status 400");
+                    throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED);
+                }
                 if (role.contains(lecturer)) {
                     System.out.println("role: " + role);
                     throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Lecturer not have permission to add-event");
@@ -479,7 +515,7 @@ public class EventController {
             if (tokenDecoded.getAlgorithm().contains("RS256")) {
                 System.out.println("this is token from azure");
 //guest เมื่อ ไม่พบ role ใน token
-                if(tokenDecoded.getClaims().get("roles") == null){
+                if (tokenDecoded.getClaims().get("roles") == null) {
                     System.out.println("this is [guest] user : guest cannot edit-event");
                     throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot edit-event");
                 }
@@ -563,7 +599,7 @@ public class EventController {
             if (tokenDecoded.getAlgorithm().contains("RS256")) {
                 System.out.println("this is token from azure");
 //guest เมื่อไม่พบ role ใน token
-                if (tokenDecoded.getClaims().get("roles") == null){
+                if (tokenDecoded.getClaims().get("roles") == null) {
                     System.out.println("this is [guest] user : guest cannot delete-event");
                     throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot delete-event");
                 }

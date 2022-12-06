@@ -88,14 +88,13 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/users").hasAuthority("admin")
 //permit all ให้หมด เพื่อรับมือ azure-token
                 .antMatchers(HttpMethod.POST,"/api/events").permitAll()
-                .antMatchers(HttpMethod.GET,"/api/events").permitAll()
-                .antMatchers(HttpMethod.GET,"/api/events/{bookingId}").permitAll()
+                .antMatchers(HttpMethod.GET,"/api/events/**").permitAll()
                 .antMatchers(HttpMethod.DELETE,"/api/events/{bookingId}").permitAll()
                 .antMatchers(HttpMethod.POST,"/api/files/upload").permitAll()
                 .antMatchers(HttpMethod.GET,"/api/files/**").permitAll()
                 .antMatchers(HttpMethod.GET,"/api/files/download/**").permitAll()
                 .antMatchers(HttpMethod.PATCH,"/api/files/update/**").permitAll()
-                .antMatchers(HttpMethod.PATCH,"/api/files/delete/**").permitAll()
+                .antMatchers(HttpMethod.DELETE,"/api/files/delete/**").permitAll()
 
 
 

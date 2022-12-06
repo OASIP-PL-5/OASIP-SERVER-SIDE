@@ -47,42 +47,42 @@ public class FilesController {
         System.out.println("\n--------\nการทำงานของ post-file\n--------");
 
 //guest (ไม่มี token)
-        if (request.getHeader("Authorization") == null) {
-            System.out.println("this is [guest] user : guest cannot upload-file");
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot upload-file");
-        }
+//        if (request.getHeader("Authorization") == null) {
+//            System.out.println("this is [guest] user : guest cannot upload-file");
+//            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot upload-file");
+//        }
 //else:condition ตัวนี้สำหรับทำงานกรณีมี token
-        else {
-//decode token เพื่อเช็ค algorithm
-            final String authorizationHeader = request.getHeader("Authorization");
-            String token = authorizationHeader.substring(7);
-            DecodedJWT tokenDecoded = JWT.decode(token);
-            System.out.println(tokenDecoded.getAlgorithm());
-//token from azure & oasip
-//alg : azure
-            if (tokenDecoded.getAlgorithm().contains("RS256")) {
-                System.out.println("this is token from azure");
-                if (tokenDecoded.getClaims().get("roles") == null) {
-                    System.out.println("this is [guest] user : guest cannot upload-file");
-                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot upload-file");
-                } else if (tokenDecoded.getClaims().get("roles").toString().contains(lecturer)) {
-                    System.out.println("role: lecturer");
-                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Lecturer not have permission to upload-file");
-                }
-            }
-//alg : oasip
-            else if (tokenDecoded.getAlgorithm().contains("HS512")) {
-                System.out.println("token from oasip");
-                String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
-                if (role.contains(lecturer)) {
-                    System.out.println("role: " + role);
-                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Lecturer not have permission to upload-file");
-                }
-            }
-
-//หาก เงื่อนไขก่อนหน้า ไม่พบว่าเป็น role: lecturer ก็จะสามารถเข้าถึง feature นี้ได้
-            if (tokenDecoded.getAlgorithm().contains("RS256") || tokenDecoded.getAlgorithm().contains("HS512")) {
-
+//        else {
+////decode token เพื่อเช็ค algorithm
+//            final String authorizationHeader = request.getHeader("Authorization");
+//            String token = authorizationHeader.substring(7);
+//            DecodedJWT tokenDecoded = JWT.decode(token);
+//            System.out.println(tokenDecoded.getAlgorithm());
+////token from azure & oasip
+////alg : azure
+//            if (tokenDecoded.getAlgorithm().contains("RS256")) {
+//                System.out.println("this is token from azure");
+//                if (tokenDecoded.getClaims().get("roles") == null) {
+//                    System.out.println("this is [guest] user : guest cannot upload-file");
+//                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot upload-file");
+//                } else if (tokenDecoded.getClaims().get("roles").toString().contains(lecturer)) {
+//                    System.out.println("role: lecturer");
+//                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Lecturer not have permission to upload-file");
+//                }
+//            }
+////alg : oasip
+//            else if (tokenDecoded.getAlgorithm().contains("HS512")) {
+//                System.out.println("token from oasip");
+//                String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
+//                if (role.contains(lecturer)) {
+//                    System.out.println("role: " + role);
+//                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Lecturer not have permission to upload-file");
+//                }
+//            }
+//
+////หาก เงื่อนไขก่อนหน้า ไม่พบว่าเป็น role: lecturer ก็จะสามารถเข้าถึง feature นี้ได้
+//            if (tokenDecoded.getAlgorithm().contains("RS256") || tokenDecoded.getAlgorithm().contains("HS512")) {
+//
                 System.out.println("size of file: " + file.getSize());
                 File fileName = dbFileService.storeFile(file, eventStartTime);
 
@@ -93,30 +93,12 @@ public class FilesController {
                         .toUriString();
 
                 return new Response(fileName.getFileName(), fileDownloadUri, file.getContentType(), file.getSize());
-            }
-        }
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "something went wrong");
+//            }
+//        }
+//        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "something went wrong");
     }
 
     //---------------------------------------------------------------
-//    @GetMapping("")
-//    public List<File> getAllFile(){
-//        return fileRepository.findAll();
-//    }
-
-//    // test post man ใส่ /downloadFile/<fileId>
-//    @GetMapping("/download/{fileId:.+}")
-//    public ResponseEntity<Resource> downloadFile(@PathVariable String fileId, HttpServletRequest request) {
-//        // Load file as Resource
-//        File file = dbFileService.getFileById(fileId);
-//
-//
-//
-//        return ResponseEntity.ok()
-//                .contentType(MediaType.parseMediaType(file.getFileType()))
-//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFileName() + "\"")
-//                .body(new ByteArrayResource(file.getData()));
-//    }
 
     //    getFileById
     @GetMapping("/{bookingId}")
@@ -153,30 +135,30 @@ public class FilesController {
     public ResponseEntity<Resource> downloadFile(@PathVariable String fileId, HttpServletRequest request) {
         System.out.println("\n--------\nการทำงานของ download-file\n--------");
 //guest (ไม่มี token)
-        if (request.getHeader("Authorization") == null) {
-            System.out.println("this is [guest] user : guest cannot download file");
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot download file");
-        } else {
-            final String authorizationHeader = request.getHeader("Authorization");
-            String token = authorizationHeader.substring(7);
-            DecodedJWT tokenDecoded = JWT.decode(token);
-            System.out.println(tokenDecoded.getAlgorithm());
-//alg : azure สำหรับดัก กรณี ไม่มี role ใน token จะถือว่าเป็น guest
-            if (tokenDecoded.getAlgorithm().contains("RS256")) {
-                System.out.println("this is token from azure");
-                if (tokenDecoded.getClaims().get("roles") == null) {
-                    System.out.println("this is [guest] user : guest cannot download file");
-                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot download file");
-                }
-            }
+//        if (request.getHeader("Authorization") == null) {
+//            System.out.println("this is [guest] user : guest cannot download file");
+//            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot download file");
+//        } else {
+//            final String authorizationHeader = request.getHeader("Authorization");
+//            String token = authorizationHeader.substring(7);
+//            DecodedJWT tokenDecoded = JWT.decode(token);
+//            System.out.println(tokenDecoded.getAlgorithm());
+////alg : azure สำหรับดัก กรณี ไม่มี role ใน token จะถือว่าเป็น guest
+//            if (tokenDecoded.getAlgorithm().contains("RS256")) {
+//                System.out.println("this is token from azure");
+//                if (tokenDecoded.getClaims().get("roles") == null) {
+//                    System.out.println("this is [guest] user : guest cannot download file");
+//                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot download file");
+//                }
+//            }
 
-            // Load file as Resource
-            File file = dbFileService.getFileById(fileId);
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(file.getFileType()))
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFileName() + "\"")
-                    .body(new ByteArrayResource(file.getData()));
-        }
+        // Load file as Resource
+        File file = dbFileService.getFileById(fileId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(file.getFileType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFileName() + "\"")
+                .body(new ByteArrayResource(file.getData()));
+//        }
     }
 
 
@@ -186,71 +168,73 @@ public class FilesController {
     public void updateFile(@PathVariable Integer bookingId, @RequestParam("file") MultipartFile file, HttpServletRequest request) throws Exception {
         System.out.println("\n--------\nการทำงานของ edit-file\n--------");
 //guest (ไม่มี token)
-        if (request.getHeader("Authorization") == null) {
-            System.out.println("this is [guest] user : guest cannot get edit file");
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot edit file");
-        }
+//        if (request.getHeader("Authorization") == null) {
+//            System.out.println("this is [guest] user : guest cannot get edit file");
+//            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot edit file");
+//        }
 //else:condition ตัวนี้สำหรับทำงานกรณีมี token
-        else {
-//decode token เพื่อเช็ค algorithm
-            final String authorizationHeader = request.getHeader("Authorization");
-            String token = authorizationHeader.substring(7);
-            DecodedJWT tokenDecoded = JWT.decode(token);
-            System.out.println(tokenDecoded.getAlgorithm());
+//        else {
+////decode token เพื่อเช็ค algorithm
+//            final String authorizationHeader = request.getHeader("Authorization");
+//            String token = authorizationHeader.substring(7);
+//            DecodedJWT tokenDecoded = JWT.decode(token);
+//            System.out.println(tokenDecoded.getAlgorithm());
 //กรองว่าเจอไฟล์ที่จะ edit ไหม
-            File getFile = dbFileService.getFileByBookingId(bookingId);
-            if (getFile == null) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found");
-            }
-//alg : azure
-            if (tokenDecoded.getAlgorithm().contains("RS256")) {
-                System.out.println("token from azure");
-                if (tokenDecoded.getClaims().get("roles").toString().contains(admin)) {
-                    System.out.println("admin role");
-                    dbFileService.updateFile(bookingId, file);
-                } else if (tokenDecoded.getClaims().get("roles").toString().contains(student)) {
-                    System.out.println("student role");
-                    String msEmail = tokenDecoded.getClaims().get("preferred_username").toString();
-//เช็คก่อนว่า student คนนี้เป็นเจ้าของ event ทีเชื่อมกับ file นี้หรือไม่
-                    List<File> checkData = fileRepository.getDataByEmailAndBookingIdWithFile(msEmail, bookingId);
-                    if (checkData.isEmpty()) {
-                        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This student cannot edit file of other user");
-                    } else {
-                        dbFileService.updateFile(bookingId, file);
-                    }
-                }
-//guest เมื่อ ไม่พบ role ใน token
-                else if (tokenDecoded.getClaims().get("roles") == null) {
-                    System.out.println("this is [guest] user : guest cannot get edit file");
-                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot edit file");
-                } else if (tokenDecoded.getClaims().get("roles").toString().contains(lecturer)) {
-                    System.out.println("lecturer cannot update file");
-                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "lecturer cannot edit file");
-                }
-            }
-//token of oasip
-            else if (tokenDecoded.getAlgorithm().contains("HS512")) {
-                System.out.println("token from oasip");
-                String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
-                if (role.contains(lecturer)) {
-                    System.out.println("lecturer cannot update file");
-                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "lecturer cannot edit file");
-                } else if (role.contains(admin)) {
-                    System.out.println("admin role");
-                    dbFileService.updateFile(bookingId, file);
-                } else if (role.contains(student)) {
-                    System.out.println("student role");
-                    String email = SecurityContextHolder.getContext().getAuthentication().getName();
-                    //เช็คก่อนว่า student คนนี้เป็นเจ้าของ event ทีเชื่อมกับ file นี้หรือไม่
-                    List<File> checkData = fileRepository.getDataByEmailAndBookingIdWithFile(email, bookingId);
-                    if (checkData.isEmpty()) {
-                        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This student cannot edit file of other user");
-                    } else {
-                        dbFileService.updateFile(bookingId, file);
-                    }
-                }
-            }
+        File getFile = dbFileService.getFileByBookingId(bookingId);
+        if (getFile == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found");
         }
+        dbFileService.updateFile(bookingId, file);
+
+//alg : azure
+//            if (tokenDecoded.getAlgorithm().contains("RS256")) {
+//                System.out.println("token from azure");
+//                if (tokenDecoded.getClaims().get("roles").toString().contains(admin)) {
+//                    System.out.println("admin role");
+//                    dbFileService.updateFile(bookingId, file);
+//                } else if (tokenDecoded.getClaims().get("roles").toString().contains(student)) {
+//                    System.out.println("student role");
+//                    String msEmail = tokenDecoded.getClaims().get("preferred_username").toString();
+////เช็คก่อนว่า student คนนี้เป็นเจ้าของ event ทีเชื่อมกับ file นี้หรือไม่
+//                    List<File> checkData = fileRepository.getDataByEmailAndBookingIdWithFile(msEmail, bookingId);
+//                    if (checkData.isEmpty()) {
+//                        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This student cannot edit file of other user");
+//                    } else {
+//                        dbFileService.updateFile(bookingId, file);
+//                    }
+//                }
+////guest เมื่อ ไม่พบ role ใน token
+//                else if (tokenDecoded.getClaims().get("roles") == null) {
+//                    System.out.println("this is [guest] user : guest cannot get edit file");
+//                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot edit file");
+//                } else if (tokenDecoded.getClaims().get("roles").toString().contains(lecturer)) {
+//                    System.out.println("lecturer cannot update file");
+//                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "lecturer cannot edit file");
+//                }
+//            }
+////token of oasip
+//            else if (tokenDecoded.getAlgorithm().contains("HS512")) {
+//                System.out.println("token from oasip");
+//                String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
+//                if (role.contains(lecturer)) {
+//                    System.out.println("lecturer cannot update file");
+//                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "lecturer cannot edit file");
+//                } else if (role.contains(admin)) {
+//                    System.out.println("admin role");
+//                    dbFileService.updateFile(bookingId, file);
+//                } else if (role.contains(student)) {
+//                    System.out.println("student role");
+//                    String email = SecurityContextHolder.getContext().getAuthentication().getName();
+//                    //เช็คก่อนว่า student คนนี้เป็นเจ้าของ event ทีเชื่อมกับ file นี้หรือไม่
+//                    List<File> checkData = fileRepository.getDataByEmailAndBookingIdWithFile(email, bookingId);
+//                    if (checkData.isEmpty()) {
+//                        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This student cannot edit file of other user");
+//                    } else {
+//                        dbFileService.updateFile(bookingId, file);
+//                    }
+//                }
+//            }
+//        }
 //        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "something went wrong");
     }
 
@@ -290,11 +274,10 @@ public class FilesController {
                     }
                 }
 //guest เมื่อไม่พบ role ใน token
-                else if(tokenDecoded.getClaims().get("roles") == null){
+                else if (tokenDecoded.getClaims().get("roles") == null) {
                     System.out.println("this is [guest] user : guest cannot delete-file");
                     throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot delete-file");
-                }
-                else if (tokenDecoded.getClaims().get("roles").toString().contains(lecturer)) {
+                } else if (tokenDecoded.getClaims().get("roles").toString().contains(lecturer)) {
                     System.out.println("lecturer cannot delete file");
                     throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "lecturer cannot delete file");
                 }
