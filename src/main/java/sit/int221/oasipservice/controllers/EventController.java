@@ -155,7 +155,8 @@ public class EventController {
 //guest (ไม่มี token)
         if (request.getHeader("Authorization") == null) {
             System.out.println("this is [guest] user : guest can view blinded-event");
-            return eventService.getBlindEventById(bookingId);
+//            return eventService.getBlindEventById(bookingId);
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot view detail of events");
         } else {
 //decode token เพื่อเช็ค algorithm
             final String authorizationHeader = request.getHeader("Authorization");
