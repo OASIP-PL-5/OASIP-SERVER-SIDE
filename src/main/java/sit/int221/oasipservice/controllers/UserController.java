@@ -127,6 +127,8 @@ public class UserController {
     @PutMapping("/change-password")
     public User forgotPassword(@Valid @RequestBody ChangeDTO changeDTO) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+
         return userService.changePassword(email,changeDTO);
     }
     @PutMapping("/forgot")
@@ -147,7 +149,14 @@ public class UserController {
 //        newPasswordDTO.setPassword(hash);
 //        updateUserDetails.setPassword(newPasswordDTO.getPassword());
 //        return repository.saveAndFlush(updateUserDetails);
+
         return userService.forgotPassword(email,newPasswordDTO);
+    }
+    @PostMapping("/mailForgot")
+    public SendMailDTO mailForgot(@Valid @RequestBody SendMailDTO SendMailDTO) {
+        System.out.println("mailForgot");
+        userService.sendMail(SendMailDTO);
+        throw new ResponseStatusException(HttpStatus.OK, "Send email complete");
     }
 
 }

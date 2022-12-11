@@ -69,11 +69,11 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 //public endpoints
                 .antMatchers(HttpMethod.POST,"/api/login").permitAll()
                 .antMatchers(HttpMethod.GET,"/api/event-categories/**").permitAll()
-
-
                 //forgot-password
-                .antMatchers(HttpMethod.POST, "/api/users/forgot-password").permitAll()
                 .antMatchers(HttpMethod.PUT, "/api/users/forgot").permitAll()
+                .antMatchers(HttpMethod.PUT,"api/users/change-password").permitAll()
+                .antMatchers(HttpMethod.POST,"api/users/mailForgot").permitAll()
+
 
                 //permit all ให้หมด เพื่อรับมือ azure-token
                 .antMatchers(HttpMethod.POST,"/api/events").permitAll()

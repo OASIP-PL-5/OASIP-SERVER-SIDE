@@ -101,9 +101,10 @@ public class EventController {
                     } else if (msRole.contains(lecturer)) {
                         System.out.println("ms [lecturer] role : " + msRole);
                         User user = userRepository.findByEmail(msEmail.replaceAll("^\"|\"$", ""));
-
+                        if (user == null){
+                            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "This lecturer email not found in oasip system. ");
+                        }
                         System.out.println("user : " + user);
-                        System.out.println(userRepository.findByEmail(msEmail));
 
                         Integer lecId = user.getId();
                         System.out.println("this is lecturer id : " + lecId);
@@ -154,7 +155,8 @@ public class EventController {
 //guest (ไม่มี token)
         if (request.getHeader("Authorization") == null) {
             System.out.println("this is [guest] user : guest can view blinded-event");
-            return eventService.getBlindEventById(bookingId);
+//            return eventService.getBlindEventById(bookingId);
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot view detail of events");
         } else {
 //decode token เพื่อเช็ค algorithm
             final String authorizationHeader = request.getHeader("Authorization");
