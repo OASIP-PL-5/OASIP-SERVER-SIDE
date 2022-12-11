@@ -244,67 +244,67 @@ public class FilesController {
     @DeleteMapping("/delete/{fileId}")
     public void deleteFile(@PathVariable String fileId, HttpServletRequest request) {
         System.out.println("\n--------\nการทำงานของ delete-file \n--------");
-        if (request.getHeader("Authorization") == null) {
-            System.out.println("this is [guest] user : guest cannot delete-file");
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot delete-file");
-        } else {
-            final String authorizationHeader = request.getHeader("Authorization");
-            String token = authorizationHeader.substring(7);
-            DecodedJWT tokenDecoded = JWT.decode(token);
-            System.out.println(tokenDecoded.getAlgorithm());
+//        if (request.getHeader("Authorization") == null) {
+//            System.out.println("this is [guest] user : guest cannot delete-file");
+//            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot delete-file");
+//        } else {
+//            final String authorizationHeader = request.getHeader("Authorization");
+//            String token = authorizationHeader.substring(7);
+//            DecodedJWT tokenDecoded = JWT.decode(token);
+//            System.out.println(tokenDecoded.getAlgorithm());
 //กรองว่า fileId นี้ มีอยู่ไหม
             fileRepository.findById(fileId).orElseThrow(() ->
                     new ResponseStatusException(HttpStatus.NOT_FOUND, fileId + " does not exist !"));
 
 //alg : azure
-            if (tokenDecoded.getAlgorithm().contains("RS256")) {
-                System.out.println("token from azure");
-                if (tokenDecoded.getClaims().get("roles").toString().contains(admin)) {
-                    System.out.println("admin role");
+//            if (tokenDecoded.getAlgorithm().contains("RS256")) {
+//                System.out.println("token from azure");
+//                if (tokenDecoded.getClaims().get("roles").toString().contains(admin)) {
+//                    System.out.println("admin role");
                     fileRepository.deleteById(fileId);
-                } else if (tokenDecoded.getClaims().get("roles").toString().contains(student)) {
-                    System.out.println("student role");
-                    String msEmail = tokenDecoded.getClaims().get("preferred_username").toString();
+//                } else if (tokenDecoded.getClaims().get("roles").toString().contains(student)) {
+//                    System.out.println("student role");
+//                    String msEmail = tokenDecoded.getClaims().get("preferred_username").toString();
 //เช็คก่อนว่า student คนนี้เป็นเจ้าของ event ทีเชื่อมกับ file นี้หรือไม่
-                    List<File> checkData = fileRepository.getDataByEmailAndFileId(msEmail, fileId);
-                    if (checkData.isEmpty()) {
-                        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This student cannot delete file of other user");
-                    } else {
-                        fileRepository.deleteById(fileId);
-                    }
-                }
-//guest เมื่อไม่พบ role ใน token
-                else if (tokenDecoded.getClaims().get("roles") == null) {
-                    System.out.println("this is [guest] user : guest cannot delete-file");
-                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot delete-file");
-                } else if (tokenDecoded.getClaims().get("roles").toString().contains(lecturer)) {
-                    System.out.println("lecturer cannot delete file");
-                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "lecturer cannot delete file");
-                }
-            }
-//token of oasip
-            else if (tokenDecoded.getAlgorithm().contains("HS512")) {
-                System.out.println("token from oasip");
-                String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
-                String email = SecurityContextHolder.getContext().getAuthentication().getName();
-                if (role.contains(admin)) {
-                    System.out.println("admin role");
-                    fileRepository.deleteById(fileId);
-                } else if (role.contains(student)) {
-                    System.out.println("student role");
-                    //เช็คก่อนว่า student คนนี้เป็นเจ้าของ event ทีเชื่อมกับ file นี้หรือไม่
-                    List<File> checkData = fileRepository.getDataByEmailAndFileId(email, fileId);
-                    if (checkData.isEmpty()) {
-                        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This student cannot delete file of other user");
-                    } else {
-                        fileRepository.deleteById(fileId);
-                    }
-                } else if (role.contains(lecturer)) {
-                    System.out.println("lecturer cannot delete file");
-                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "lecturer cannot delete file");
-                }
-            }
-        }
+//                    List<File> checkData = fileRepository.getDataByEmailAndFileId(msEmail, fileId);
+//                    if (checkData.isEmpty()) {
+//                        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This student cannot delete file of other user");
+//                    } else {
+//                        fileRepository.deleteById(fileId);
+//                    }
+//                }
+////guest เมื่อไม่พบ role ใน token
+//                else if (tokenDecoded.getClaims().get("roles") == null) {
+//                    System.out.println("this is [guest] user : guest cannot delete-file");
+//                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "guest cannot delete-file");
+//                } else if (tokenDecoded.getClaims().get("roles").toString().contains(lecturer)) {
+//                    System.out.println("lecturer cannot delete file");
+//                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "lecturer cannot delete file");
+//                }
+//            }
+////token of oasip
+//            else if (tokenDecoded.getAlgorithm().contains("HS512")) {
+//                System.out.println("token from oasip");
+//                String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().toString();
+//                String email = SecurityContextHolder.getContext().getAuthentication().getName();
+//                if (role.contains(admin)) {
+//                    System.out.println("admin role");
+//                    fileRepository.deleteById(fileId);
+//                } else if (role.contains(student)) {
+//                    System.out.println("student role");
+//                    //เช็คก่อนว่า student คนนี้เป็นเจ้าของ event ทีเชื่อมกับ file นี้หรือไม่
+//                    List<File> checkData = fileRepository.getDataByEmailAndFileId(email, fileId);
+//                    if (checkData.isEmpty()) {
+//                        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This student cannot delete file of other user");
+//                    } else {
+//                        fileRepository.deleteById(fileId);
+//                    }
+//                } else if (role.contains(lecturer)) {
+//                    System.out.println("lecturer cannot delete file");
+//                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "lecturer cannot delete file");
+//                }
+//            }
+//        }
     }
 
 

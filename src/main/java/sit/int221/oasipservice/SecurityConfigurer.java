@@ -90,6 +90,7 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.POST,"/api/events").permitAll()
                 .antMatchers(HttpMethod.GET,"/api/events/**").permitAll()
                 .antMatchers(HttpMethod.DELETE,"/api/events/{bookingId}").permitAll()
+                .antMatchers(HttpMethod.PUT,"/api/events/{id}").permitAll()
                 .antMatchers(HttpMethod.POST,"/api/files/upload").permitAll()
                 .antMatchers(HttpMethod.GET,"/api/files/**").permitAll()
                 .antMatchers(HttpMethod.GET,"/api/files/download/**").permitAll()
