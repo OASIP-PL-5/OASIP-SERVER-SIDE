@@ -25,6 +25,7 @@ public class JwtUtility implements Serializable {
     //private static final long JWT_TOKEN_VALIDITY = 60;
     private static final long JWT_TOKEN_VALIDITY_REFRESH = 24 * 60 * 60;
 //private static final long JWT_TOKEN_VALIDITY_REFRESH =  60;
+    private static final  long JWT_TOKEN_VALIDITY_REFRESH_FORGOT = 10 * 60;
 
     @Autowired
     private UserRepository userRepository;
@@ -77,8 +78,8 @@ public class JwtUtility implements Serializable {
         User getUser = userRepository.findByEmail(subject);
         return Jwts.builder().setSubject(subject)
                 .claim("role",getUser.getRole())
-                .claim("userName",getUser.getName())
                 .claim("id",getUser.getId())
+                .claim("username",getUser.getName())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
                 .signWith(SignatureAlgorithm.HS512, secret).compact();
@@ -102,8 +103,8 @@ public class JwtUtility implements Serializable {
         User getUser = userRepository.findByEmail(subject);
         return Jwts.builder().setSubject(subject)
                 .claim("role",getUser.getRole())
-                .claim("userName",getUser.getName())
                 .claim("id",getUser.getId())
+                .claim("username",getUser.getName())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY_REFRESH * 1000))
                 .signWith(SignatureAlgorithm.HS512, secret).compact();
@@ -123,4 +124,36 @@ public class JwtUtility implements Serializable {
     }
 
 
+
+
+    //generate token for ms team
+    public String generateTokenMs(Map<String, Object> claims,String subject) {
+//        User getUser = userRepository.findByEmail(subject);
+        return Jwts.builder().setSubject(subject)
+                .setClaims(claims)
+//                .claim("role",claims.get("role"))
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
+                .signWith(SignatureAlgorithm.HS512, secret).compact();
+    }
+    public String generateReTokenMs(Map<String, Object> claims,String subject) {
+//        User getUser = userRepository.findByEmail(subject);
+        return Jwts.builder().setSubject(subject)
+                .setClaims(claims)
+//                .claim("role",claims.get("role"))
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY_REFRESH * 1000))
+                .signWith(SignatureAlgorithm.HS512, secret).compact();
+    }
+    public String genToken(String subject) {
+        User getUser = userRepository.findByEmail(subject);
+//        System.out.println(getUser);
+        return Jwts.builder().setSubject(subject)
+                .claim("role",getUser.getRole())
+                .claim("id",getUser.getId())
+                .claim("username",getUser.getName())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY_REFRESH_FORGOT * 1000))
+                .signWith(SignatureAlgorithm.HS512, secret).compact();
+    }
 }

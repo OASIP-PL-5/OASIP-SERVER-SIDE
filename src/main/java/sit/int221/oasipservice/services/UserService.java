@@ -146,7 +146,7 @@ public class UserService implements UserDetailsService {
 //
 //        ทำการ findByEmail เพื่อนำ email ไปเทียบ password (ติดแค่ตรง ตอน login มันยังไม่แปลง password-argon2 เป็น raw ให้)
         User user = repository.findByEmail(username);
-//        argon2 สำหรับการ verify password 
+//        argon2 สำหรับการ verify password
 //        Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id, 16, 16);
 
 
@@ -159,20 +159,23 @@ public class UserService implements UserDetailsService {
 //        User user = repository.findByEmail(email);
 //        System.out.println("email: " + email);
         System.out.println("email: " + email.getEmail());
-            // Creating a simple mail message
-            SimpleMailMessage mailMessage
-                    = new SimpleMailMessage();
+        // Creating a simple mail message
+        SimpleMailMessage mailMessage
+                = new SimpleMailMessage();
 
-            // Setting up necessary details
-            mailMessage.setFrom(sender);
-            mailMessage.setTo(email.getEmail());
-            mailMessage.setText("https://intproj21.sit.kmutt.ac.th/pl5/"); //<-https://intproj21.sit.kmutt.ac.th/pl5/?token="+service.gentoken() maybe
-            mailMessage.setSubject("Change Password");
+        String mail = email.getEmail();
+//        System.out.println("This mail");
+//        System.out.println(mail);
+        // Setting up necessary details
+        mailMessage.setFrom(sender);
+        mailMessage.setTo(email.getEmail());
+        mailMessage.setText("https://intproj21.sit.kmutt.ac.th/pl5/reset-password?token="+jwtUtility.genToken(mail)); //<-https://intproj21.sit.kmutt.ac.th/pl5/?token="+service.gentoken() maybe
+        mailMessage.setSubject("Change Password");
 
-            javaMailSender.send(mailMessage);
+        javaMailSender.send(mailMessage);
     }
 
-//    public ResponseEntity newPassword(NewPasswordDTO newPasswordDTO) {
+    //    public ResponseEntity newPassword(NewPasswordDTO newPasswordDTO) {
 //        //get email by token
 //        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 //        //get user by email
