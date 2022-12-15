@@ -2,12 +2,15 @@ package sit.int221.oasipservice.services;
 
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
-import lombok.AllArgsConstructor;
+//import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -15,16 +18,15 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 //import sit.int221.oasipservice.dtos.NewUserDTO;
 import org.springframework.web.server.ResponseStatusException;
-import sit.int221.oasipservice.dtos.MatchPasswordDTO;
-import sit.int221.oasipservice.dtos.UserDTO;
+import sit.int221.oasipservice.dtos.*;
 import sit.int221.oasipservice.entities.User;
 import sit.int221.oasipservice.repositories.UserRepository;
 import sit.int221.oasipservice.utils.JwtUtility;
 
+
 import java.util.*;
 import java.util.stream.Collectors;
 
-@AllArgsConstructor
 @Service
 public class UserService implements UserDetailsService {
     @Autowired
@@ -41,6 +43,12 @@ public class UserService implements UserDetailsService {
 
     @Autowired
     private JwtUtility jwtUtility;
+
+    @Autowired
+    private JavaMailSender javaMailSender;
+
+    @Value("${spring.mail.username}")
+    private String sender;
 
     public List<UserDTO> getAllUserByDTO() {
         return repository.findAll(Sort.by(Sort.Direction.ASC, "name")).stream().map(this::convertEntityToDto).collect(Collectors.toList());
@@ -143,5 +151,79 @@ public class UserService implements UserDetailsService {
 
 
         return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), Collections.emptyList());
+    }
+
+    //send mail
+    public void sendMail(SendMailDTO email){
+        //check user by email
+//        User user = repository.findByEmail(email);
+//        System.out.println("email: " + email);
+        System.out.println("email: " + email.getEmail());
+        // Creating a simple mail message
+        SimpleMailMessage mailMessage
+                = new SimpleMailMessage();
+
+        String mail = email.getEmail();
+//        System.out.println("This mail");
+//        System.out.println(mail);
+        // Setting up necessary details
+        mailMessage.setFrom(sender);
+        mailMessage.setTo(email.getEmail());
+        mailMessage.setText("https://intproj21.sit.kmutt.ac.th/pl5/reset-password?token="+jwtUtility.genToken(mail)); //<-https://intproj21.sit.kmutt.ac.th/pl5/?token="+service.gentoken() maybe
+        mailMessage.setSubject("Change Password");
+
+        javaMailSender.send(mailMessage);
+    }
+
+    public User forgotPassword(String email, NewPasswordDTO newPasswordDTO) {
+        System.out.println("email: " + email);
+        System.out.println("newPasswordDTO: " + newPasswordDTO.getPassword());
+//        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User updateUserDetails = repository.findByEmail(email);
+        //encrypt password with argon2 before save to database
+        if (newPasswordDTO.getPassword().length() < 8 || newPasswordDTO.getPassword().length() > 14) {
+            System.out.println("invalid number of password : " + newPasswordDTO.getPassword().length());
+//            return new ResponseEntity("The password must be between 8 and 14 characters long", HttpStatus.BAD_REQUEST);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The password must be between 8 and 14 characters long");
+        }
+        System.out.println("valid number of password (8-14): " + newPasswordDTO.getPassword() + " --> (" + newPasswordDTO.getPassword().length() + ")");
+        Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id, 16, 16);
+        String hash = argon2.hash(2, 16, 1, newPasswordDTO.getPassword());
+        newPasswordDTO.setPassword(hash);
+        updateUserDetails.setPassword(newPasswordDTO.getPassword());
+        return repository.saveAndFlush(updateUserDetails);
+    }
+
+
+
+
+    public User changePassword(String email , ChangeDTO changeDTO) {
+        System.out.println("changeDTO: " + changeDTO.getPassword());
+        System.out.println("changeDTO: " + changeDTO.getNewPassword());
+        //get user by email
+        User user = repository.findByEmail(email);
+        //check if user is null, return 404
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        }
+        //check password
+        Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id, 16, 16);
+        boolean isPasswordCorrect = argon2.verify(user.getPassword(), changeDTO.getPassword().toCharArray());
+        //if password is correct then change password
+        if (isPasswordCorrect) {
+            System.out.println(isPasswordCorrect);
+            if (changeDTO.getNewPassword().length() < 8 || changeDTO.getNewPassword().length() > 14) {
+                System.out.println("invalid number of password : " + changeDTO.getNewPassword().length());
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The password must be between 8 and 14 characters long");
+            }
+//            Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id, 16, 16);
+            String hash = argon2.hash(2, 16, 1, changeDTO.getNewPassword());
+            changeDTO.setNewPassword(hash);
+            changeDTO.setNewPassword(changeDTO.getNewPassword());
+            user.setPassword(changeDTO.getNewPassword());
+            return repository.saveAndFlush(user);
+        }
+        //if password is incorrect, return 401
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Password incorrect");
     }
 }

@@ -76,16 +76,11 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.GET,"/api/events/getEventByPast").hasAnyAuthority("admin","lecturer","student")
                 .antMatchers(HttpMethod.GET,"/api/events/getEventsByEventStartTime/{eventStartTime}").hasAnyAuthority("admin","lecturer","student")
 
-                //send email
-                .antMatchers(HttpMethod.POST,"/api/email/sendMail").permitAll()
-
 //                .antMatchers("/api/events/**").permitAll()
                 .antMatchers("/api/match").hasAuthority("admin")
                 // ใช้ได้เฉพาะมี token ถึงจะเข้า /users ได้
 //                .antMatchers(HttpMethod.GET,"/api/users").permitAll()
-                .antMatchers(HttpMethod.POST,"/api/users").hasAuthority("admin")
-                .antMatchers(HttpMethod.POST,"/api/users/**").hasAuthority("admin")
-                .antMatchers("/api/users").hasAuthority("admin")
+
 //permit all ให้หมด เพื่อรับมือ azure-token
                 .antMatchers(HttpMethod.POST,"/api/events").permitAll()
                 .antMatchers(HttpMethod.GET,"/api/events/**").permitAll()
@@ -96,12 +91,21 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.GET,"/api/files/download/**").permitAll()
                 .antMatchers(HttpMethod.PATCH,"/api/files/update/**").permitAll()
                 .antMatchers(HttpMethod.DELETE,"/api/files/delete/**").permitAll()
-
-
+//forgot-password
+//                .antMatchers(HttpMethod.POST,"/api/users/mailForgot").hasAnyAuthority("admin","student","lecturer")
+                // /mailForgot ต้อง permitAll() เพราะขณะที่ user จะเข้า function "forgot-password" user จะยังเป็น guest อยู่แล้ว
+                .antMatchers(HttpMethod.POST,"/api/users/mailForgot").permitAll()
+                .antMatchers(HttpMethod.PUT, "/api/users/forgot").permitAll()
+                .antMatchers(HttpMethod.PUT,"/api/users/change-password").permitAll()
+//send email
+                .antMatchers(HttpMethod.POST,"/api/email/sendMail").permitAll()
 
 
                 //privilege endpoint
-
+//for post-user by admin
+                .antMatchers(HttpMethod.POST,"/api/users").hasAuthority("admin")
+                .antMatchers(HttpMethod.POST,"/api/users/**").hasAuthority("admin")
+                .antMatchers("/api/users").hasAuthority("admin")
                 //admin สามารถจัดการ category ได้
                 .antMatchers("/api/event-categories/").access("hasAuthority('admin')")
                 .antMatchers(HttpMethod.PUT,"/api/event-categories/{id}").hasAuthority("admin")
