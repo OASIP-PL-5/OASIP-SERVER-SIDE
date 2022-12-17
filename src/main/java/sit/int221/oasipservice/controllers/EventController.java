@@ -174,7 +174,7 @@ public class EventController {
 //role ใน token != null ก็คือพบ role จากการ decode azure-token ดังกล่าว
                 else if (tokenDecoded.getClaims().get("roles") != null) {
                     String msRole = tokenDecoded.getClaims().get("roles").toString();
-                    String msEmail = tokenDecoded.getClaims().get("preferred_username").toString();
+                    String msEmail = tokenDecoded.getClaims().get("preferred_username").toString().replaceAll("^\"|\"$", "");
 //admin-role
                     if (msRole.contains(admin)) {
                         System.out.println("ms [admin] role : " + msRole);
@@ -197,7 +197,7 @@ public class EventController {
 //lecturer-role
                     else if (msRole.contains(lecturer)) {
                         System.out.println("ms [lecturer] role : " + msRole);
-                        User lecUser = userRepository.findByEmail(msEmail);
+                        User lecUser = userRepository.findByEmail(msEmail.replaceAll("^\"|\"$", ""));
                         Integer lecId = lecUser.getId();
                         List isEmptyDetail = eventService.getDetailByLecturerIdAndBookingId(lecId, bookingId);
                         if (isEmptyDetail.isEmpty()) {
@@ -533,12 +533,15 @@ public class EventController {
 //student-role โดย default เมื่อ role == null จาก azure-token
                 else if (tokenDecoded.getClaims().get("roles").toString().contains(student)) {
                     System.out.println("student role");
-                    String msEmail = tokenDecoded.getClaims().get("preferred_username").toString();
+                    String msEmail = tokenDecoded.getClaims().get("preferred_username").toString().replaceAll("^\"|\"$", "");
+                    System.out.println(msEmail);
                     List<Event> checkEventEmailMS = repository.getEventByBookingEmailAndBookingId(msEmail, id);
+                    System.out.println("check bookingName: "+checkEventEmailMS.get(0).getBookingName());
                     if (checkEventEmailMS.isEmpty()) {
                         System.out.println("Student not have permission to edit this event.");
                         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "This Student not have permission to edit this event.");
                     } else {
+                        System.out.println("กรองพบว่าเจอ event สำหรับการ edit");
                         return repository.saveAndFlush(storedEventDetails);
                     }
                 }

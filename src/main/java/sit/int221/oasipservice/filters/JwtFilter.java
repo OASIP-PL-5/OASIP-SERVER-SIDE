@@ -35,25 +35,11 @@ public class JwtFilter extends OncePerRequestFilter {
         final String authorizationHeader = request.getHeader("Authorization");
         String username = null;
         String jwtToken = null;
-        System.out.println("การทำงานใน jwtfilter.java");
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer")) {
             jwtToken = authorizationHeader.substring(7);
-            System.out.println("jwtToken : "+jwtToken);
 //            username is email from token
             if (jwtToken.length() < 300){
                 username = jwtUtility.getUsernameFromToken(jwtToken);
-                System.out.println("username : "+username);
-            }
-            else if(jwtToken.length() > 300){
-                System.out.println("this is token from ms-azure ::");
-//                username = jwtUtility.getUsernameFromAzureToken(jwtToken);
-//                System.out.println("username(from azure-token) : "+username);
-                DecodedJWT jwtAzure = JWT.decode(jwtToken);
-                System.out.println("jwt azure expired: "+jwtAzure.getExpiresAt());
-                System.out.println("this is cliaims from jwtAzure(roles) : "+jwtAzure.getClaims().get("roles"));
-                System.out.println("this is cliaims from jwtAzure(email) : "+jwtAzure.getClaims().get("preferred_username"));
-                System.out.println("this is cliaims from jwtAzure(name) : "+jwtAzure.getClaims().get("name"));
-
             }
         }
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {

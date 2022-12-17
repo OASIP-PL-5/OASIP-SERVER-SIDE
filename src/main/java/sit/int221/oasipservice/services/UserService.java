@@ -163,10 +163,14 @@ public class UserService implements UserDetailsService {
         SimpleMailMessage mailMessage
                 = new SimpleMailMessage();
 
+        String mail = email.getEmail();
+//        System.out.println("This mail");
+//        System.out.println(mail);
         // Setting up necessary details
         mailMessage.setFrom(sender);
         mailMessage.setTo(email.getEmail());
-        mailMessage.setText("https://intproj21.sit.kmutt.ac.th/pl5/reset-password?token="+jwtUtility.genToken(String.valueOf(email))); //<-https://intproj21.sit.kmutt.ac.th/pl5/?token="+service.gentoken() maybe
+//        mailMessage.setText("https://intproj21.sit.kmutt.ac.th/pl5/reset-password?token="+jwtUtility.genToken(mail)); //<-https://intproj21.sit.kmutt.ac.th/pl5/?token="+service.gentoken() maybe
+        mailMessage.setText("http://localhost:3000/reset-password?token="+jwtUtility.genToken(mail));
         mailMessage.setSubject("Change Password");
 
         javaMailSender.send(mailMessage);
