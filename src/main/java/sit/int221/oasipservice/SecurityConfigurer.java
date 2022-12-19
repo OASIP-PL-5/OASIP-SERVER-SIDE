@@ -99,13 +99,19 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.PUT,"/api/users/change-password").permitAll()
 //send email
                 .antMatchers(HttpMethod.POST,"/api/email/sendMail").permitAll()
+//user-management
+                .antMatchers(HttpMethod.GET,"/api/users/**").permitAll()
+                .antMatchers(HttpMethod.POST,"/api/users").permitAll()
+                .antMatchers(HttpMethod.PUT,"/api/users/**").permitAll()
+                .antMatchers(HttpMethod.DELETE,"/api/users/**").permitAll()
+
 
 
                 //privilege endpoint
 //for post-user by admin
-                .antMatchers(HttpMethod.POST,"/api/users").hasAuthority("admin")
-                .antMatchers(HttpMethod.POST,"/api/users/**").hasAuthority("admin")
-                .antMatchers("/api/users").hasAuthority("admin")
+//                .antMatchers(HttpMethod.POST,"/api/users").hasAuthority("admin")
+//                .antMatchers(HttpMethod.POST,"/api/users/**").hasAuthority("admin")
+//                .antMatchers("/api/users").hasAuthority("admin")
                 //admin สามารถจัดการ category ได้
                 .antMatchers("/api/event-categories/").access("hasAuthority('admin')")
                 .antMatchers(HttpMethod.PUT,"/api/event-categories/{id}").hasAuthority("admin")
@@ -118,7 +124,7 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
 
                 //admin สามารถ get user และ match passowrd ได้
 //                .antMatchers(HttpMethod.GET,"/api/users").hasAnyAuthority("admin","lecturer","student")
-                .antMatchers(HttpMethod.GET,"/api/users").hasAnyAuthority("admin","student","lecturer")
+//                .antMatchers(HttpMethod.GET,"/api/users").hasAnyAuthority("admin","student","lecturer")
                 .antMatchers(HttpMethod.POST,"/api/match").hasAuthority("admin")
 
 
