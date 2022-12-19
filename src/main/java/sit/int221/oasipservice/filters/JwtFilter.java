@@ -1,5 +1,7 @@
 package sit.int221.oasipservice.filters;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -33,20 +35,21 @@ public class JwtFilter extends OncePerRequestFilter {
         final String authorizationHeader = request.getHeader("Authorization");
         String username = null;
         String jwtToken = null;
-
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer")) {
             jwtToken = authorizationHeader.substring(7);
-            username = jwtUtility.getUsernameFromToken(jwtToken);
-
-
+//            username is email from token
+            if (jwtToken.length() < 300){
+                username = jwtUtility.getUsernameFromToken(jwtToken);
+            }
         }
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userService.loadUserByUsername(username);
-
+            System.out.println("loadUser by username success : "+userDetails);
             if (jwtUtility.validateToken(jwtToken, userDetails)) {
                 UsernamePasswordAuthenticationToken authentication =
                         jwtUtility.getAuthentication(jwtToken, SecurityContextHolder.getContext().getAuthentication(), userDetails);
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                System.out.println("authentication : "+authentication);
                 logger.info("authenticated user " + username + ", setting security context");
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
