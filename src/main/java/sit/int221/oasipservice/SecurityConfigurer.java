@@ -68,7 +68,6 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 //public endpoints
                 .antMatchers(HttpMethod.POST,"/api/login").permitAll()
-                .antMatchers(HttpMethod.GET,"/api/event-categories/**").permitAll()
 
                 //filter menu
                 .antMatchers(HttpMethod.GET,"/api/events/getByEventCategories/{eventCategoryId}").hasAnyAuthority("admin","lecturer","student")
@@ -99,13 +98,27 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.PUT,"/api/users/change-password").permitAll()
 //send email
                 .antMatchers(HttpMethod.POST,"/api/email/sendMail").permitAll()
+//user-management
+                .antMatchers(HttpMethod.GET,"/api/users/**").permitAll()
+                .antMatchers(HttpMethod.POST,"/api/users").permitAll()
+                .antMatchers(HttpMethod.PUT,"/api/users/**").permitAll()
+                .antMatchers(HttpMethod.DELETE,"/api/users/**").permitAll()
+//event-cate
+                .antMatchers(HttpMethod.GET,"/api/event-categories/**").permitAll()
+                .antMatchers(HttpMethod.PUT,"/api/event-categories/**").permitAll()
+                .antMatchers(HttpMethod.DELETE,"/api/event-categories/**").permitAll()
+                .antMatchers(HttpMethod.POST,"/api/event-categories/**").permitAll()
+
+
+
+
 
 
                 //privilege endpoint
 //for post-user by admin
-                .antMatchers(HttpMethod.POST,"/api/users").hasAuthority("admin")
-                .antMatchers(HttpMethod.POST,"/api/users/**").hasAuthority("admin")
-                .antMatchers("/api/users").hasAuthority("admin")
+//                .antMatchers(HttpMethod.POST,"/api/users").hasAuthority("admin")
+//                .antMatchers(HttpMethod.POST,"/api/users/**").hasAuthority("admin")
+//                .antMatchers("/api/users").hasAuthority("admin")
                 //admin สามารถจัดการ category ได้
                 .antMatchers("/api/event-categories/").access("hasAuthority('admin')")
                 .antMatchers(HttpMethod.PUT,"/api/event-categories/{id}").hasAuthority("admin")
@@ -118,7 +131,7 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
 
                 //admin สามารถ get user และ match passowrd ได้
 //                .antMatchers(HttpMethod.GET,"/api/users").hasAnyAuthority("admin","lecturer","student")
-                .antMatchers(HttpMethod.GET,"/api/users").hasAnyAuthority("admin","student","lecturer")
+//                .antMatchers(HttpMethod.GET,"/api/users").hasAnyAuthority("admin","student","lecturer")
                 .antMatchers(HttpMethod.POST,"/api/match").hasAuthority("admin")
 
 

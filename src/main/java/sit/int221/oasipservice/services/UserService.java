@@ -222,6 +222,8 @@ public class UserService implements UserDetailsService {
         System.out.println("changeDTO: " + changeDTO.getNewPassword());
         //get user by email
         User user = repository.findByEmail(email);
+        System.out.println("user: " + user);
+        System.out.println(repository.findByEmail(email));
         //check if user is null, return 404
         if (user == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");

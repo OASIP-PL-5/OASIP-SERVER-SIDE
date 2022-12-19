@@ -610,7 +610,8 @@ public class EventController {
 //student role (ทำงานในนี้เกี่ยวกับ student role เลย
                 else if (tokenDecoded.getClaims().get("roles").toString().contains(student)) {
                     System.out.println("default role is [student] role");
-                    String msEmail = tokenDecoded.getClaims().get("preferred_username").toString();
+                    String msEmail = tokenDecoded.getClaims().get("preferred_username").toString().replaceAll("^\"|\"$", "");
+
                     List<Event> checkEventEmailMS = repository.getEventByBookingEmailAndBookingId(msEmail, bookingId);
 //student กรณีที่ email+bookingId ไม่พบ event ของตน แสดงว่า เป็น event ของคนอื่น ในเงื่อนไข isEmpty() นี้เราจะไม่อนุญาต ให้ student คนนี้ลบ event ของคนอื่น
 // (แต่่ถ้า query แล้วเจอ event ก็จะ สามารถ deleteEvent นั้นได้
